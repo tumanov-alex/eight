@@ -13,8 +13,6 @@ const COLORS = {
 
 export const useColors = () => {
   const isDarkTheme = useIsDarkMode();
-  console.log(isDarkTheme)
-  console.log('========= isDarkTheme  ==========')
 
   return COLORS[isDarkTheme ? 'dark' : 'light'];
 };
