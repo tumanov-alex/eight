@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   SafeAreaView,
@@ -13,23 +14,36 @@ import Buttons from '../components/Buttons';
 import { shuffleArray } from '../utils/shuffleArray';
 import { useColors } from '../hooks/useColors';
 import 'react-native-gesture-handler'; // import before using, to avoid app crash
+import { swap } from '../utils/swap';
 
-const emptyTile = 0;
-const numbersInOrder = [1, 2, 3, 4, 5, 6, 7, 8, emptyTile];
+export const emptyTile = null;
+export type tile = number | null;
+// eslint-disable-next-line prettier/prettier
+const numbersInOrder: tile[] = [
+  1, 2, 3,
+  4, 5, 6,
+  7, 8, emptyTile,
+];
 
 export const App = () => {
   const colors = useColors();
   const { getItem: getNumbersStore, setItem: setNumbersStore } =
     useAsyncStorage('@numbers');
 
-  const [numbers, setNumbersState] = useState<number[]>([]);
+  const [numbers, setNumbersState] = useState<tile[]>([]);
   const setNumbers = useCallback(
-    (nums: number[]) => {
+    (nums: tile[]) => {
       setNumbersStore(JSON.stringify(nums));
       setNumbersState(nums);
     },
     [setNumbersStore],
   );
+  const onTileMove = (position1: number, position2: number) => {
+    const tmp = swap(position1, position2, numbers);
+    setNumbers(tmp);
+    console.log(tmp);
+    console.log('========= swap(position1, position2, numbers)  ==========')
+  };
 
   const getAsyncStorage = useCallback(async () => {
     try {
@@ -56,7 +70,7 @@ export const App = () => {
         onShuffle={() => setNumbers(shuffleArray(numbersInOrder))}
       />
 
-      <Field numbers={numbers} setNumbers={setNumbers} />
+      <Field numbers={numbers} onTileMove={onTileMove} />
     </View>
   );
 

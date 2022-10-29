@@ -2,16 +2,20 @@ import React from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { useColors } from '../hooks/useColors';
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import 'react-native-gesture-handler'; // import before using, to avoid app crash
+// import 'react-native-gesture-handler'; // import before using, to avoid app crash
+import { isXYAxis } from '../utils/matrix';
 
 interface Props {
   number: number;
   position: number;
+  emptyTilePosition: number;
+  onTileMove: Function;
 }
 
 interface ContainerStyle {
@@ -25,23 +29,38 @@ interface ContainerStyle {
 const size = 100;
 const tileMoveThreshold = size / 2;
 
-export const Tile = ({ number, position }: Props) => {
+export const Tile = ({
+  number,
+  position,
+  emptyTilePosition,
+  onTileMove,
+}: Props) => {
   const colors = useColors();
 
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
   const start = useSharedValue({ x: 0, y: 0 });
+  const isOkToMove = useSharedValue(isXYAxis(position, emptyTilePosition));
 
   const animatedStyles = useAnimatedStyle(() => {
-    return {
+    const style = {
       transform: [
-        { translateX: offset.value.x },
-        { translateY: offset.value.y },
         { scale: withSpring(isPressed.value ? 1.2 : 1) },
+        { translateX: 0 },
+        { translateY: 0 },
       ],
       backgroundColor: isPressed.value ? 'hotpink' : 'darkblue',
       zIndex: isPressed.value ? 1 : 0,
     };
+
+    if (isOkToMove.value) {
+      style.transform.push(
+        { translateX: offset.value.x },
+        { translateY: offset.value.y },
+      );
+    }
+
+    return style;
   });
 
   const gesture = Gesture.Pan()
@@ -62,9 +81,11 @@ export const Tile = ({ number, position }: Props) => {
             ? Math.sign(e.translationY) * size
             : y,
       };
-      console.log(offset.value);
+      // console.log(offset.value);
     })
     .onEnd((e) => {
+      // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+      runOnJS(onTileMove)(position, emptyTilePosition);
       // console.log(e.translationX, e.translationY)
       const absoluteTX = Math.abs(e.translationX);
       const absoluteTY = Math.abs(e.translationY);
@@ -165,5 +186,6 @@ const styles = StyleSheet.create<any>({
   text: (color: string): any => ({
     color,
     fontWeight: 'bold',
+    fontSize: 24,
   }),
 });
