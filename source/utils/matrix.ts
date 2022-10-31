@@ -1,22 +1,33 @@
-const gameMatrixSize = 3;
-const horizontalTileDiff = 1;
+// todo: add support for matrices bigger than 3
+const gameFieldSize = 3;
 
 export const isAxisY = (n1: number, n2: number) => {
-  const upTwo = n1 - gameMatrixSize * 2;
-  const upOne = n1 - gameMatrixSize;
-  const downTwo = n1 + gameMatrixSize * 2;
-  const downOne = n1 + gameMatrixSize;
+  const upTwo = n1 - gameFieldSize * 2;
+  const upOne = n1 - gameFieldSize;
+  const downTwo = n1 + gameFieldSize * 2;
+  const downOne = n1 + gameFieldSize;
 
   return n2 === upTwo || n2 === upOne || n2 === downTwo || n2 === downOne;
 };
 
 export const isAxisX = (n1: number, n2: number) => {
-  const leftTwo = n1 - horizontalTileDiff * 2;
-  const leftOne = n1 - horizontalTileDiff;
-  const rightTwo = n1 + horizontalTileDiff * 2;
-  const rightOne = n1 + horizontalTileDiff;
-
-  return n2 === leftTwo || n2 === leftOne || n2 === rightTwo || n2 === rightOne;
+  switch (n1) {
+    case 0:
+    case 1:
+    case 2: {
+      return n2 === 0 || n2 === 1 || n2 === 2;
+    }
+    case 3:
+    case 4:
+    case 5: {
+      return n2 === 3 || n2 === 4 || n2 === 5;
+    }
+    case 6:
+    case 7:
+    case 8: {
+      return n2 === 6 || n2 === 7 || n2 === 8;
+    }
+  }
 };
 
 export const isXYAxis = (n1: number, n2: number) =>
