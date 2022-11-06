@@ -9,21 +9,12 @@ interface Props {
   onTileMove: Function;
 }
 
-/*
- * position < 3 => no UP y
- *
- * 0: no LEFT x, no UP y
- * 1: no UP y
- * 2: no RIGHT x, no UP y
- * */
-
 export const Field = ({ numbers, onTileMove }: Props) => {
   const emptyTilePosition = numbers.indexOf(emptyTile);
 
   return (
     <View style={styles.container}>
       {numbers.map((n: tile, i: number) =>
-        n === emptyTile ? null : (
           <Tile
             onTileMove={onTileMove}
             position={i}
@@ -31,7 +22,15 @@ export const Field = ({ numbers, onTileMove }: Props) => {
             emptyTilePosition={emptyTilePosition}
             key={n}
           />
-        ),
+        // n === emptyTile ? null : (
+        //   <Tile
+        //     onTileMove={onTileMove}
+        //     position={i}
+        //     number={n}
+        //     emptyTilePosition={emptyTilePosition}
+        //     key={n}
+        //   />
+        // ),
       )}
     </View>
   );

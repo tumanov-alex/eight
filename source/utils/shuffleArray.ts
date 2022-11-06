@@ -1,4 +1,8 @@
-export const shuffleArray = <T>(array: T[]): T[] => {
+import { emptyTile } from '../screens/App';
+import { getWithoutEmptyTile } from './getWithoutEmptyTile';
+import type { tile as tileType } from '../screens/App';
+
+const shuffleArray = <T>(array: T[]): T[] => {
   const arr = [...array];
   let currentIndex = arr.length;
   let randomIndex;
@@ -18,3 +22,8 @@ export const shuffleArray = <T>(array: T[]): T[] => {
 
   return arr;
 };
+
+export const shuffleTiles = (array: tileType[]): tileType[] => [
+  ...shuffleArray(getWithoutEmptyTile(array)),
+  emptyTile,
+];

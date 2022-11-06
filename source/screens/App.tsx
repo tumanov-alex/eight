@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   SafeAreaView,
@@ -7,23 +6,19 @@ import {
   View,
 } from 'react-native';
 import { useAsyncStorage } from '@react-native-async-storage/async-storage';
+import 'react-native-gesture-handler'; // import before using, to avoid app crash
 
 import { Field } from '../components/Field';
 import Buttons from '../components/Buttons';
 
-import { shuffleArray } from '../utils/shuffleArray';
+import { shuffleTiles } from '../utils/shuffleArray';
 import { useColors } from '../hooks/useColors';
-import 'react-native-gesture-handler'; // import before using, to avoid app crash
 import { swap } from '../utils/swap';
+import { compareArrays } from '../utils/compareArrays';
 
 export const emptyTile = null;
-export type tile = number | null;
-// eslint-disable-next-line prettier/prettier
-const numbersInOrder: tile[] = [
-  1, 2, 3,
-  4, 5, 6,
-  7, 8, emptyTile,
-];
+export type tile = number | typeof emptyTile;
+const numbersInOrder: tile[] = [1, 2, 3, 4, 5, 6, 7, 8, emptyTile];
 
 export const App = () => {
   const colors = useColors();
@@ -31,6 +26,7 @@ export const App = () => {
     useAsyncStorage('@numbers');
 
   const [numbers, setNumbersState] = useState<tile[]>([]);
+  const [isGameFinished, setIsGameFinished] = useState<boolean>(false);
   const setNumbers = useCallback(
     (nums: tile[]) => {
       setNumbersStore(JSON.stringify(nums));
@@ -39,10 +35,7 @@ export const App = () => {
     [setNumbersStore],
   );
   const onTileMove = (position1: number, position2: number) => {
-    const tmp = swap(position1, position2, numbers);
-    setNumbers(tmp);
-    console.log(tmp);
-    console.log('========= swap(position1, position2, numbers)  ==========')
+    setNumbers(swap(position1, position2, numbers));
   };
 
   const getAsyncStorage = useCallback(async () => {
@@ -52,7 +45,7 @@ export const App = () => {
       if (resJson !== null) {
         setNumbersState(JSON.parse(resJson));
       } else {
-        setNumbers(shuffleArray(numbersInOrder));
+        setNumbers(shuffleTiles(numbersInOrder));
       }
     } catch (e) {
       console.error(e);
@@ -63,11 +56,21 @@ export const App = () => {
     !numbers.length && getAsyncStorage();
   }, [getAsyncStorage, numbers.length]);
 
+  useEffect(() => {
+    const isNumbersInOrder = compareArrays(numbers, numbersInOrder);
+
+    if (isGameFinished === false && isNumbersInOrder) {
+      setIsGameFinished(true);
+    } else if (isGameFinished && isNumbersInOrder === false) {
+      setIsGameFinished(false);
+    }
+  }, [isGameFinished, numbers]);
+
   const Game = () => (
     <View style={styles.fieldContainer}>
       <Buttons
         onReset={() => setNumbers(numbersInOrder)}
-        onShuffle={() => setNumbers(shuffleArray(numbersInOrder))}
+        onShuffle={() => setNumbers(shuffleTiles(numbersInOrder))}
       />
 
       <Field numbers={numbers} onTileMove={onTileMove} />
