@@ -14,24 +14,15 @@ export const Field = ({ numbers, onTileMove }: Props) => {
 
   return (
     <View style={styles.container}>
-      {numbers.map((n: tile, i: number) =>
-          <Tile
-            onTileMove={onTileMove}
-            position={i}
-            number={n}
-            emptyTilePosition={emptyTilePosition}
-            key={n}
-          />
-        // n === emptyTile ? null : (
-        //   <Tile
-        //     onTileMove={onTileMove}
-        //     position={i}
-        //     number={n}
-        //     emptyTilePosition={emptyTilePosition}
-        //     key={n}
-        //   />
-        // ),
-      )}
+      {numbers.map((n: tile, i: number) => (
+        <Tile
+          onTileMove={onTileMove}
+          position={i}
+          number={n}
+          emptyTilePosition={emptyTilePosition}
+          key={n}
+        />
+      ))}
     </View>
   );
 };

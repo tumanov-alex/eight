@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   View,
+  Alert,
 } from 'react-native';
 import { useAsyncStorage } from '@react-native-async-storage/async-storage';
 import 'react-native-gesture-handler'; // import before using, to avoid app crash
@@ -15,6 +16,7 @@ import { shuffleTiles } from '../utils/shuffleArray';
 import { useColors } from '../hooks/useColors';
 import { swap } from '../utils/swap';
 import { compareArrays } from '../utils/compareArrays';
+import { useMoveCount } from '../hooks/useMoveCount';
 
 export const emptyTile = null;
 export type tile = number | typeof emptyTile;
@@ -22,6 +24,7 @@ const numbersInOrder: tile[] = [1, 2, 3, 4, 5, 6, 7, 8, emptyTile];
 
 export const App = () => {
   const colors = useColors();
+  const { moveCount, incrementMoveCount, resetMoveCount } = useMoveCount();
   const { getItem: getNumbersStore, setItem: setNumbersStore } =
     useAsyncStorage('@numbers');
 
@@ -35,6 +38,7 @@ export const App = () => {
     [setNumbersStore],
   );
   const onTileMove = (position1: number, position2: number) => {
+    incrementMoveCount();
     setNumbers(swap(position1, position2, numbers));
   };
 
@@ -61,17 +65,25 @@ export const App = () => {
 
     if (isGameFinished === false && isNumbersInOrder) {
       setIsGameFinished(true);
+      Alert.alert('Your score is', moveCount.toString());
     } else if (isGameFinished && isNumbersInOrder === false) {
       setIsGameFinished(false);
     }
-  }, [isGameFinished, numbers]);
+  }, [isGameFinished, moveCount, numbers]);
+
+  const onReset = () => {
+    setNumbers(numbersInOrder);
+    resetMoveCount();
+  };
+
+  const onShuffle = () => {
+    setNumbers(shuffleTiles(numbersInOrder));
+    resetMoveCount();
+  };
 
   const Game = () => (
     <View style={styles.fieldContainer}>
-      <Buttons
-        onReset={() => setNumbers(numbersInOrder)}
-        onShuffle={() => setNumbers(shuffleTiles(numbersInOrder))}
-      />
+      <Buttons onReset={onReset} onShuffle={onShuffle} />
 
       <Field numbers={numbers} onTileMove={onTileMove} />
     </View>

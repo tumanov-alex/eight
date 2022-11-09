@@ -15,8 +15,8 @@ export default function Buttons({
 
   return (
     <View style={styles.container}>
-      <Button onPress={onReset} title="Reset" color={colors.main} />
-      <Button onPress={onShuffle} title="Shuffle" color={colors.main} />
+      <Button onPress={onReset} title="Reset" color={colors.secondary} />
+      <Button onPress={onShuffle} title="Shuffle" color={colors.secondary} />
     </View>
   );
 }
