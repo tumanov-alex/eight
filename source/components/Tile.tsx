@@ -1,18 +1,16 @@
 import React from 'react';
-import { Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 import { useColors } from '../hooks/useColors';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-// import 'react-native-gesture-handler'; // import before using, to avoid app crash
 import { isXYAxis } from '../utils/matrix';
 
 interface Props {
-  number: number;
+  number: number | null;
   position: number;
   emptyTilePosition: number;
   onTileMove: Function;
@@ -44,12 +42,9 @@ export const Tile = ({
 
   const animatedStyles = useAnimatedStyle(() => {
     const style = {
-      transform: [
-        { scale: withSpring(isPressed.value ? 1.2 : 1) },
-        { translateX: 0 },
-        { translateY: 0 },
-      ],
-      backgroundColor: isPressed.value ? 'hotpink' : 'darkblue',
+      transform: [{ translateX: 0 }, { translateY: 0 }],
+      backgroundColor:
+        isPressed.value && isOkToMove.value ? 'hotpink' : 'darkblue',
       zIndex: isPressed.value ? 1 : 0,
     };
 
@@ -81,18 +76,17 @@ export const Tile = ({
             ? Math.sign(e.translationY) * size
             : y,
       };
-      // console.log(offset.value);
     })
     .onEnd((e) => {
-      // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-      runOnJS(onTileMove)(position, emptyTilePosition);
-      // console.log(e.translationX, e.translationY)
       const absoluteTX = Math.abs(e.translationX);
       const absoluteTY = Math.abs(e.translationY);
       const isTileBeenMoved =
         absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
 
-      if (isTileBeenMoved) {
+      if (isOkToMove.value && isTileBeenMoved) {
+        // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+        runOnJS(onTileMove)(position, emptyTilePosition);
+
         if (absoluteTX > absoluteTY) {
           const absoluteY = Math.abs(offset.value.y);
 
@@ -118,13 +112,11 @@ export const Tile = ({
             y: start.value.y + Math.sign(e.translationY) * size,
           };
         }
-        // console.log(offset.value);
 
         start.value = {
           x: offset.value.x,
           y: offset.value.y,
         };
-        // console.log(start.value)
       } else {
         start.value = { x: 0, y: 0 };
         offset.value = { x: 0, y: 0 };
@@ -132,7 +124,6 @@ export const Tile = ({
     })
     .onFinalize(() => {
       isPressed.value = false;
-      // console.log('=========   ==========');
     });
 
   const getBorderStyle = (position: number, borderColor: string) => {
@@ -156,15 +147,19 @@ export const Tile = ({
     return styles;
   };
 
+  if (number === null) {
+    return <View style={styles.empty} />;
+  }
+
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View
         style={[
           styles.container,
-          getBorderStyle(position, colors.main),
+          getBorderStyle(position, colors.secondary),
           animatedStyles,
         ]}>
-        <Text style={styles.text(colors.main)}>{number}</Text>
+        <Text style={styles.text(colors.secondary)}>{number}</Text>
       </Animated.View>
     </GestureDetector>
   );
