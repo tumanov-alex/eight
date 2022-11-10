@@ -16,10 +16,10 @@ export const Field = ({ numbers, onTileMove }: Props) => {
     <View style={styles.container}>
       {numbers.map((n: tile, i: number) => (
         <Tile
+          emptyTilePosition={emptyTilePosition}
           onTileMove={onTileMove}
           position={i}
           number={n}
-          emptyTilePosition={emptyTilePosition}
           key={n}
         />
       ))}

@@ -14,5 +14,5 @@ const COLORS = {
 export const useColors = () => {
   const isDarkTheme = useIsDarkMode();
 
-  return COLORS[isDarkTheme ? 'dark' : 'light'];
+  return COLORS[isDarkTheme ? 'light' : 'dark'];
 };

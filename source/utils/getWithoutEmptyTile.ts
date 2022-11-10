@@ -1,5 +1,6 @@
 import type { tile } from '../screens/App';
 import { emptyTile } from '../screens/App';
 
-export const getWithoutEmptyTile = (nums: tile[]) =>
-  nums.filter((tile) => tile !== emptyTile);
+// todo: remove any
+export const getWithoutEmptyTile = (tiles: tile[]): any[] =>
+  tiles.filter((tile) => tile !== emptyTile);
