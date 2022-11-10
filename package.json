@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^1.17.7",
+    "lodash.isequal": "^4.5.0",
     "react": "18.0.0",
     "react-native": "0.69.0",
     "react-native-gesture-handler": "^2.6.1",
