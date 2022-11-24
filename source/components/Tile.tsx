@@ -127,22 +127,30 @@ export const Tile = ({
         (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
 
       if (isOkToMove && isTileBeenMoved) {
-        if (isMovedHorizontally && !isDoingForbiddenMoveHorizontally) {
-          // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-          runOnJS(onTileMove)(position, emptyTilePosition);
+        if (isMovedHorizontally) {
+          if (isDoingForbiddenMoveHorizontally) {
+            offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
+          } else {
+            // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+            runOnJS(onTileMove)(position, emptyTilePosition);
 
-          offset.value = {
-            x: start.value.x + Math.sign(e.translationX) * tileSize, // todo: remove start.value
-            y: 0,
-          };
-        } else if (!isDoingForbiddenMoveVertically) {
-          // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-          runOnJS(onTileMove)(position, emptyTilePosition);
+            offset.value = {
+              x: Math.sign(e.translationX) * tileSize,
+              y: 0,
+            };
+          }
+        } else {
+          if (isDoingForbiddenMoveVertically) {
+            offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
+          } else {
+            // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+            runOnJS(onTileMove)(position, emptyTilePosition);
 
-          offset.value = {
-            x: 0,
-            y: start.value.y + Math.sign(e.translationY) * tileSize, // todo: remove start.value
-          };
+            offset.value = {
+              x: 0,
+              y: Math.sign(e.translationY) * tileSize,
+            };
+          }
         }
 
         start.value = {
