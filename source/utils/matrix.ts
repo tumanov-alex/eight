@@ -1,5 +1,7 @@
 // todo: add support for matrices bigger than 3
+
 const gameFieldSize = 3;
+const totalFieldSize = gameFieldSize ** 2;
 
 export const isAxisY = (n1: number, n2: number) => {
   const upTwo = n1 - gameFieldSize * 2;
@@ -32,3 +34,58 @@ export const isAxisX = (n1: number, n2: number) => {
 
 export const isXYAxis = (n1: number, n2: number) =>
   isAxisY(n1, n2) || isAxisX(n1, n2);
+
+const getRightRowPositions = () => {
+  const positions = [];
+
+  for (let i = gameFieldSize - 1; i < totalFieldSize; i += gameFieldSize) {
+    positions.push(i);
+  }
+
+  return positions;
+};
+
+const rightRowPositions = getRightRowPositions();
+
+export const isMovableUp = (
+  position: number,
+  emptyTilePosition: number,
+): boolean => {
+  const isOnTopRow = position < gameFieldSize;
+  const isTopTileEmpty = emptyTilePosition === position - gameFieldSize;
+
+  return !isOnTopRow && isTopTileEmpty;
+};
+
+export const isMovableDown = (
+  position: number,
+  emptyTilePosition: number,
+): boolean => {
+  const bottomRightTilePosition = totalFieldSize - 1;
+  const bottomLeftTilePosition = totalFieldSize - gameFieldSize;
+  const isOnBottomRow =
+    position >= bottomLeftTilePosition && position <= bottomRightTilePosition;
+  const isBottomTileEmpty = emptyTilePosition === position + gameFieldSize;
+
+  return !isOnBottomRow && isBottomTileEmpty;
+};
+
+export const isMovableLeft = (
+  position: number,
+  emptyTilePosition: number,
+): boolean => {
+  const isOnLeftRow = position % gameFieldSize === 0;
+  const isLeftTileEmpty = emptyTilePosition === position - 1;
+
+  return !isOnLeftRow && isLeftTileEmpty;
+};
+
+export const isMovableRight = (
+  position: number,
+  emptyTilePosition: number,
+): boolean => {
+  const isOnRightRow = rightRowPositions.includes(position);
+  const isRightTileEmpty = emptyTilePosition === position + 1;
+
+  return !isOnRightRow && isRightTileEmpty;
+};

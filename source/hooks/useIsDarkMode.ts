@@ -8,4 +8,5 @@ export const useIsDarkMode = (): boolean => {
   const colorScheme = useColorScheme();
   // todo: make it actually react to a device theme
   return colorScheme === (isDevtoolsOpened ? 'light' : 'dark');
+  // return Appearance.getColorScheme() === 'dark';
 };

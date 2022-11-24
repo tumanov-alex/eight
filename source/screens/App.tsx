@@ -1,97 +1,84 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
   ActivityIndicator,
   View,
   Alert,
+  Text,
 } from 'react-native';
-import { useAsyncStorage } from '@react-native-async-storage/async-storage';
 import 'react-native-gesture-handler'; // import before using, to avoid app crash
 
 import { Field } from '../components/Field';
 import Buttons from '../components/Buttons';
-
 import { shuffleTiles } from '../utils/shuffleArray';
 import { useColors } from '../hooks/useColors';
 import { swap } from '../utils/swap';
-import { compareArrays } from '../utils/compareArrays';
 import { useMoveCount } from '../hooks/useMoveCount';
-
-export const emptyTile = null;
-export type tile = number | typeof emptyTile;
-const numbersInOrder: tile[] = [1, 2, 3, 4, 5, 6, 7, 8, emptyTile];
+import { tilesInOrder, useTiles } from '../hooks/useTiles';
+import { useIsGameFinished } from '../hooks/useIsGameFinished';
 
 export const App = () => {
   const colors = useColors();
-  const { moveCount, incrementMoveCount, resetMoveCount } = useMoveCount();
-  const { getItem: getNumbersStore, setItem: setNumbersStore } =
-    useAsyncStorage('@numbers');
+  const { isGameFinished, setIsGameFinished } = useIsGameFinished();
+  const { tiles, setTiles } = useTiles(isGameFinished); // todo: move to Tile.tsx?
+  const { moveCount, bestMoveCount, incrementMoveCount, resetMoveCount } =
+    useMoveCount(tiles);
 
-  const [numbers, setNumbersState] = useState<tile[]>([]);
-  const [isGameFinished, setIsGameFinished] = useState<boolean>(false);
-  const setNumbers = useCallback(
-    (nums: tile[]) => {
-      setNumbersStore(JSON.stringify(nums));
-      setNumbersState(nums);
-    },
-    [setNumbersStore],
-  );
   const onTileMove = (position1: number, position2: number) => {
     incrementMoveCount();
-    setNumbers(swap(position1, position2, numbers));
+    setTiles(swap(position1, position2, tiles));
   };
-
-  const getAsyncStorage = useCallback(async () => {
-    try {
-      const resJson = await getNumbersStore();
-
-      if (resJson !== null) {
-        setNumbersState(JSON.parse(resJson));
-      } else {
-        setNumbers(shuffleTiles(numbersInOrder));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [getNumbersStore, setNumbers]);
-
-  useEffect(() => {
-    !numbers.length && getAsyncStorage();
-  }, [getAsyncStorage, numbers.length]);
-
-  useEffect(() => {
-    const isNumbersInOrder = compareArrays(numbers, numbersInOrder);
-
-    if (isGameFinished === false && isNumbersInOrder) {
-      setIsGameFinished(true);
-      Alert.alert('Your score is', moveCount.toString());
-    } else if (isGameFinished && isNumbersInOrder === false) {
-      setIsGameFinished(false);
-    }
-  }, [isGameFinished, moveCount, numbers]);
 
   const onReset = () => {
-    setNumbers(numbersInOrder);
+    // setIsGameFinished((prev) => ({
+    //   previous: prev.last,
+    //   last: true,
+    // }));
+    // setIsGameFinished(true);
+    setTiles(tilesInOrder);
     resetMoveCount();
+    console.log('R E S E T');
   };
-
   const onShuffle = () => {
-    setNumbers(shuffleTiles(numbersInOrder));
+    // setIsGameFinished((prev) => ({
+    //   previous: prev.last,
+    //   last: false,
+    // }));
+    // setIsGameFinished(false);
+    setTiles(shuffleTiles(tilesInOrder));
     resetMoveCount();
+    console.log('S H U F F L E');
   };
 
   const Game = () => (
     <View style={styles.fieldContainer}>
       <Buttons onReset={onReset} onShuffle={onShuffle} />
 
-      <Field numbers={numbers} onTileMove={onTileMove} />
+      <Text style={{ color: 'white', alignSelf: 'center', fontSize: 40 }}>
+        {moveCount}
+        {'\n'}
+        {bestMoveCount}
+      </Text>
+
+      <Field tiles={tiles} onTileMove={onTileMove} />
     </View>
   );
 
+  useEffect(() => {
+    if (isGameFinished) {
+      Alert.alert(
+        `Your score is ${moveCount.toString()}`,
+        bestMoveCount < Infinity
+          ? `Your best score is ${bestMoveCount.toString()}`
+          : undefined,
+      );
+    }
+  }, [isGameFinished, moveCount, bestMoveCount]);
+
   return (
     <SafeAreaView style={styles.container('black')}>
-      {numbers.length ? <Game /> : <ActivityIndicator color={colors.main} />}
+      {tiles.length ? <Game /> : <ActivityIndicator color={colors.main} />}
     </SafeAreaView>
   );
 };

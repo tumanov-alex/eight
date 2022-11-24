@@ -1,19 +1,29 @@
 import React from 'react';
 import { Text, StyleSheet, View } from 'react-native';
-import { useColors } from '../hooks/useColors';
 import Animated, {
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { isXYAxis } from '../utils/matrix';
+
+import {
+  isAxisX,
+  isAxisY,
+  isMovableDown,
+  isMovableLeft,
+  isMovableRight,
+  isMovableUp,
+} from '../utils/matrix';
+import { useColors } from '../hooks/useColors';
+import { tileType } from '../hooks/useTiles';
 
 interface Props {
-  number: number | null;
+  tile: tileType;
   position: number;
   emptyTilePosition: number;
   onTileMove: Function;
+  isGameFinished: boolean;
 }
 
 interface ContainerStyle {
@@ -24,31 +34,36 @@ interface ContainerStyle {
   borderColor: string;
 }
 
-const size = 100;
-const tileMoveThreshold = size / 2;
+export const tileSize = 100;
+const tileMoveThreshold = tileSize / 2;
 
 export const Tile = ({
-  number,
+  tile,
   position,
   emptyTilePosition,
   onTileMove,
+  isGameFinished,
 }: Props) => {
   const colors = useColors();
-
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
   const start = useSharedValue({ x: 0, y: 0 });
-  const isOkToMove = useSharedValue(isXYAxis(position, emptyTilePosition));
+  const isX = isAxisX(position, emptyTilePosition); // todo: rename to smth like "isOnXAxisWithEmptyTile"
+  const isY = isAxisY(position, emptyTilePosition); // todo: rename to smth like "isOnXAxisWithEmptyTile"
+  const isOkToMove = !isGameFinished && (isX || isY); // todo: rename to account for flags below
+  const isOkToMoveRight = isMovableRight(position, emptyTilePosition);
+  const isOkToMoveLeft = isMovableLeft(position, emptyTilePosition);
+  const isOkToMoveUp = isMovableUp(position, emptyTilePosition);
+  const isOkToMoveDown = isMovableDown(position, emptyTilePosition);
 
   const animatedStyles = useAnimatedStyle(() => {
     const style = {
       transform: [{ translateX: 0 }, { translateY: 0 }],
-      backgroundColor:
-        isPressed.value && isOkToMove.value ? 'hotpink' : 'darkblue',
+      backgroundColor: isPressed.value && isOkToMove ? 'hotpink' : 'darkblue',
       zIndex: isPressed.value ? 1 : 0,
     };
 
-    if (isOkToMove.value) {
+    if (isOkToMove) {
       style.transform.push(
         { translateX: offset.value.x },
         { translateY: offset.value.y },
@@ -66,50 +81,67 @@ export const Tile = ({
       const x = e.translationX + start.value.x;
       const y = e.translationY + start.value.y;
 
-      offset.value = {
-        x:
-          Math.abs(e.translationX) > size
-            ? Math.sign(e.translationX) * size
-            : x,
-        y:
-          Math.abs(e.translationY) > size
-            ? Math.sign(e.translationY) * size
-            : y,
-      };
+      const isMovedLeft = x < 0;
+      const isMovedRight = x > 0;
+      const isMovedUp = y < 0;
+      const isMovedDown = y > 0;
+
+      const isDoingForbiddenMoveHorizontally =
+        (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
+      const isDoingForbiddenMoveVertically =
+        (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+
+      if (isX && !isDoingForbiddenMoveHorizontally) {
+        offset.value = {
+          x:
+            Math.abs(e.translationX) > tileSize // forbid to move further than one tile
+              ? Math.sign(e.translationX) * tileSize
+              : x,
+          y: start.value.y,
+        };
+      } else if (isY && !isDoingForbiddenMoveVertically) {
+        offset.value = {
+          x: start.value.x,
+          y:
+            Math.abs(e.translationY) > tileSize // forbid to move further than one tile
+              ? Math.sign(e.translationY) * tileSize
+              : y,
+        };
+      }
     })
     .onEnd((e) => {
       const absoluteTX = Math.abs(e.translationX);
       const absoluteTY = Math.abs(e.translationY);
+      const isMovedHorizontally = absoluteTX > absoluteTY;
       const isTileBeenMoved =
         absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
 
-      if (isOkToMove.value && isTileBeenMoved) {
-        // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-        runOnJS(onTileMove)(position, emptyTilePosition);
+      const isMovedLeft = e.translationX < 0;
+      const isMovedRight = e.translationX > 0;
+      const isMovedUp = e.translationY < 0;
+      const isMovedDown = e.translationY > 0;
 
-        if (absoluteTX > absoluteTY) {
-          const absoluteY = Math.abs(offset.value.y);
+      const isDoingForbiddenMoveHorizontally =
+        (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
+      const isDoingForbiddenMoveVertically =
+        (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+
+      if (isOkToMove && isTileBeenMoved) {
+        if (isMovedHorizontally && !isDoingForbiddenMoveHorizontally) {
+          // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+          runOnJS(onTileMove)(position, emptyTilePosition);
 
           offset.value = {
-            x: start.value.x + Math.sign(e.translationX) * size,
-            y:
-              absoluteY > tileMoveThreshold
-                ? Math.sign(offset.value.y) *
-                  size *
-                  Math.floor(absoluteY / size)
-                : 0,
+            x: start.value.x + Math.sign(e.translationX) * tileSize, // todo: remove start.value
+            y: 0,
           };
-        } else {
-          const absoluteX = Math.abs(offset.value.x);
+        } else if (!isDoingForbiddenMoveVertically) {
+          // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+          runOnJS(onTileMove)(position, emptyTilePosition);
 
           offset.value = {
-            x:
-              absoluteX > tileMoveThreshold
-                ? Math.sign(offset.value.x) *
-                  size *
-                  Math.floor(absoluteX / size)
-                : 0,
-            y: start.value.y + Math.sign(e.translationY) * size,
+            x: 0,
+            y: start.value.y + Math.sign(e.translationY) * tileSize, // todo: remove start.value
           };
         }
 
@@ -126,6 +158,7 @@ export const Tile = ({
       isPressed.value = false;
     });
 
+  // todo: make border the same width everywhere
   const getBorderStyle = (position: number, borderColor: string) => {
     const styles: ContainerStyle = {
       borderColor,
@@ -147,7 +180,7 @@ export const Tile = ({
     return styles;
   };
 
-  if (number === null) {
+  if (tile === null) {
     return <View style={styles.empty} />;
   }
 
@@ -159,7 +192,7 @@ export const Tile = ({
           getBorderStyle(position, colors.secondary),
           animatedStyles,
         ]}>
-        <Text style={styles.text(colors.secondary)}>{number}</Text>
+        <Text style={styles.text(colors.secondary)}>{tile}</Text>
       </Animated.View>
     </GestureDetector>
   );
@@ -167,15 +200,15 @@ export const Tile = ({
 
 const styles = StyleSheet.create<any>({
   container: {
-    height: size,
-    width: size,
+    height: tileSize,
+    width: tileSize,
     borderStyle: 'solid',
     justifyContent: 'center',
     alignItems: 'center',
   },
   empty: {
-    width: size,
-    height: size,
+    width: tileSize,
+    height: tileSize,
     zIndex: -1,
   },
   text: (color: string): any => ({

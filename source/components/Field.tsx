@@ -1,26 +1,30 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+
 import { Tile } from './Tile';
-import { emptyTile } from '../screens/App';
-import { tile } from '../screens/App';
+import { tileType, emptyTile } from '../hooks/useTiles';
+import { tileSize } from './Tile';
+import { useIsGameFinished } from '../hooks/useIsGameFinished';
 
 interface Props {
-  numbers: tile[];
+  tiles: tileType[];
   onTileMove: Function;
 }
 
-export const Field = ({ numbers, onTileMove }: Props) => {
-  const emptyTilePosition = numbers.indexOf(emptyTile);
+export const Field = ({ tiles, onTileMove }: Props) => {
+  const emptyTilePosition = tiles.indexOf(emptyTile);
+  const { isGameFinished } = useIsGameFinished();
 
   return (
     <View style={styles.container}>
-      {numbers.map((n: tile, i: number) => (
+      {tiles.map((t: tileType, i: number) => (
         <Tile
           emptyTilePosition={emptyTilePosition}
+          isGameFinished={isGameFinished}
           onTileMove={onTileMove}
           position={i}
-          number={n}
-          key={n}
+          tile={t}
+          key={t}
         />
       ))}
     </View>
@@ -32,5 +36,7 @@ const styles = StyleSheet.create({
     flex: 0.5,
     flexWrap: 'wrap',
     flexDirection: 'row',
+    width: tileSize * 3, // todo: add support for matrices bigger than 3
+    alignSelf: 'center',
   },
 });

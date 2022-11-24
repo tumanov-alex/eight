@@ -1,7 +1,7 @@
-import type { tile as tileType } from '../screens/App';
-import { emptyTile } from '../screens/App';
+import { emptyTile } from '../hooks/useTiles';
 import { getWithoutEmptyTile } from './getWithoutEmptyTile';
 import { getInversionCount } from './getInversionCount';
+import { tileType as tileType } from '../hooks/useTiles';
 
 const shuffleArray = (arr: number[]): number[] =>
   Array(arr.length)
