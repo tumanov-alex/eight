@@ -17,6 +17,7 @@ import {
 } from '../utils/matrix';
 import { useColors } from '../hooks/useColors';
 import { tileType } from '../hooks/useTiles';
+import { emptyTile } from '../hooks/useTiles';
 
 interface Props {
   tile: tileType;
@@ -94,18 +95,18 @@ export const Tile = ({
       if (isX && !isDoingForbiddenMoveHorizontally) {
         offset.value = {
           x:
-            Math.abs(e.translationX) > tileSize // forbid to move further than one tile
-              ? Math.sign(e.translationX) * tileSize
-              : x,
+            Math.abs(e.translationX) > tileSize // if moving further than one tile
+              ? Math.sign(e.translationX) * tileSize // then limit to one tile
+              : x, // else move to an actual value
           y: start.value.y,
         };
       } else if (isY && !isDoingForbiddenMoveVertically) {
         offset.value = {
           x: start.value.x,
           y:
-            Math.abs(e.translationY) > tileSize // forbid to move further than one tile
-              ? Math.sign(e.translationY) * tileSize
-              : y,
+            Math.abs(e.translationY) > tileSize // if moving further than one tile
+              ? Math.sign(e.translationY) * tileSize // then limit to one tile
+              : y, // else move to an actual value
         };
       }
     })
@@ -188,7 +189,7 @@ export const Tile = ({
     return styles;
   };
 
-  if (tile === null) {
+  if (tile === emptyTile) {
     return <View style={styles.empty} />;
   }
 
