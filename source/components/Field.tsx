@@ -5,15 +5,16 @@ import { Tile } from './Tile';
 import { tileType, emptyTile } from '../hooks/useTiles';
 import { tileSize } from './Tile';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
+import { OnTileMove } from '../screens/App';
 
 interface Props {
   tiles: tileType[];
-  onTileMove: Function;
+  onTileMove: OnTileMove;
 }
 
 export const Field = ({ tiles, onTileMove }: Props) => {
   const emptyTilePosition = tiles.indexOf(emptyTile);
-  const { isGameFinished } = useIsGameFinished();
+  const { isGameFinished } = useIsGameFinished(tiles);
 
   return (
     <View style={styles.container}>

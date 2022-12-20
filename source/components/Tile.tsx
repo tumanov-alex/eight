@@ -18,12 +18,13 @@ import {
 import { useColors } from '../hooks/useColors';
 import { tileType } from '../hooks/useTiles';
 import { emptyTile } from '../hooks/useTiles';
+import { OnTileMove } from '../screens/App';
 
 interface Props {
   tile: tileType;
   position: number;
   emptyTilePosition: number;
-  onTileMove: Function;
+  onTileMove: OnTileMove;
   isGameFinished: boolean;
 }
 

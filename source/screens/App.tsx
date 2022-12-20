@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -18,34 +18,30 @@ import { useMoveCount } from '../hooks/useMoveCount';
 import { tilesInOrder, useTiles } from '../hooks/useTiles';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
 
+export type OnTileMove = (position1: number, position2: number) => void;
+
 export const App = () => {
   const colors = useColors();
-  const { isGameFinished, setIsGameFinished } = useIsGameFinished();
-  const { tiles, setTiles } = useTiles(isGameFinished); // todo: move to Tile.tsx?
+  const { tiles, setTiles } = useTiles(); // todo: move to Tile.tsx?
+  const { isGameFinished, setIsGameFinished } = useIsGameFinished(tiles);
   const { moveCount, bestMoveCount, incrementMoveCount, resetMoveCount } =
     useMoveCount(tiles);
+  const [isResetting, setIsResetting] = useState(false);
 
-  const onTileMove = (position1: number, position2: number) => {
+  const onTileMove: OnTileMove = (position1, position2) => {
     incrementMoveCount();
     setTiles(swap(position1, position2, tiles));
   };
 
   const onReset = () => {
-    // setIsGameFinished((prev) => ({
-    //   previous: prev.last,
-    //   last: true,
-    // }));
-    // setIsGameFinished(true);
+    setIsResetting(true);
+    setTimeout(() => setIsResetting(false), 10000); // todo: make it work without setTimeout
     setTiles(tilesInOrder);
     resetMoveCount();
     console.log('R E S E T');
   };
   const onShuffle = () => {
-    // setIsGameFinished((prev) => ({
-    //   previous: prev.last,
-    //   last: false,
-    // }));
-    // setIsGameFinished(false);
+    setIsGameFinished(false);
     setTiles(shuffleTiles(tilesInOrder));
     resetMoveCount();
     console.log('S H U F F L E');
@@ -66,7 +62,9 @@ export const App = () => {
   );
 
   useEffect(() => {
-    if (isGameFinished) {
+    console.log(moveCount, bestMoveCount, isGameFinished)
+    console.log('========= moveCount, bestMoveCount, isGameFinished  ==========')
+    if (isGameFinished && isResetting === false) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
         bestMoveCount < Infinity
@@ -74,7 +72,13 @@ export const App = () => {
           : undefined,
       );
     }
-  }, [isGameFinished, moveCount, bestMoveCount]);
+  }, [
+    isGameFinished,
+    moveCount,
+    bestMoveCount,
+    setIsGameFinished,
+    isResetting,
+  ]);
 
   return (
     <SafeAreaView style={styles.container('black')}>

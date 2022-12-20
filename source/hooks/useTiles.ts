@@ -3,13 +3,12 @@ import { useAsyncStorage } from '@react-native-async-storage/async-storage';
 
 import { shuffleTiles } from '../utils/shuffleArray';
 import { compareArrays } from '../utils/compareArrays';
-import { useIsGameFinished } from './useIsGameFinished';
 
 export const emptyTile = null;
 export type tileType = number | typeof emptyTile;
 export const tilesInOrder: tileType[] = [1, 2, 3, 4, 5, 6, 7, 8, emptyTile];
 
-export const useTiles = (isGameFinished: boolean) => {
+export const useTiles = () => {
   const [tiles, setTilesState] = useState<tileType[]>([]);
   const { getItem: getTilesStore, setItem: setTilesStore } =
     useAsyncStorage('@tiles');
@@ -18,7 +17,6 @@ export const useTiles = (isGameFinished: boolean) => {
     prev: isTilesInOrder,
     last: isTilesInOrder,
   });
-  const { setIsGameFinished } = useIsGameFinished();
 
   if (isTilesInOrderCache.current.last !== isTilesInOrder) {
     isTilesInOrderCache.current = {
@@ -52,14 +50,6 @@ export const useTiles = (isGameFinished: boolean) => {
   useEffect(() => {
     !tiles.length && readFromAsyncStore();
   }, [readFromAsyncStore, tiles.length]);
-
-  useEffect(() => {
-    if (isTilesInOrderCache.current.prev === false && isTilesInOrderCache.current.last) {
-      // setIsGameFinished(true);
-    } else if (isTilesInOrderCache.current.prev && isTilesInOrderCache.current.last === false) {
-      // setIsGameFinished(false);
-    }
-  }, [isTilesInOrderCache, setIsGameFinished]);
 
   return { tiles, setTiles };
 };
