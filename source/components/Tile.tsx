@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
@@ -75,23 +75,118 @@ export const Tile = ({
     return style;
   });
 
+  // const gesture = Gesture.Pan()
+  //   .onBegin(() => {
+  //     isPressed.value = true;
+  //   })
+  //   .onUpdate((e) => {
+  //     const x = e.translationX + start.value.x;
+  //     const y = e.translationY + start.value.y;
+  //
+  //     const isMovedLeft = x < 0;
+  //     const isMovedRight = x > 0;
+  //     const isMovedUp = y < 0;
+  //     const isMovedDown = y > 0;
+  //
+  //     const isDoingForbiddenMoveHorizontally =
+  //       (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
+  //     const isDoingForbiddenMoveVertically =
+  //       (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+  //
+  //     if (isX && !isDoingForbiddenMoveHorizontally) {
+  //       offset.value = {
+  //         x:
+  //           Math.abs(e.translationX) > tileSize // if moving further than one tile
+  //             ? Math.sign(e.translationX) * tileSize // then limit to one tile
+  //             : x, // else move to an actual value
+  //         y: start.value.y,
+  //       };
+  //     } else if (isY && !isDoingForbiddenMoveVertically) {
+  //       offset.value = {
+  //         x: start.value.x,
+  //         y:
+  //           Math.abs(e.translationY) > tileSize // if moving further than one tile
+  //             ? Math.sign(e.translationY) * tileSize // then limit to one tile
+  //             : y, // else move to an actual value
+  //       };
+  //     }
+  //   })
+  //   .onEnd((e) => {
+  //     const absoluteTX = Math.abs(e.translationX);
+  //     const absoluteTY = Math.abs(e.translationY);
+  //     const isMovedHorizontally = absoluteTX > absoluteTY;
+  //     const isTileBeenMoved =
+  //       absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
+  //
+  //     const isMovedLeft = e.translationX < 0;
+  //     const isMovedRight = e.translationX > 0;
+  //     const isMovedUp = e.translationY < 0;
+  //     const isMovedDown = e.translationY > 0;
+  //
+  //     const isDoingForbiddenMoveHorizontally =
+  //       (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
+  //     const isDoingForbiddenMoveVertically =
+  //       (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+  //
+  //     if (isOkToMove && isTileBeenMoved) {
+  //       if (isMovedHorizontally) {
+  //         if (isDoingForbiddenMoveHorizontally) {
+  //           offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
+  //         } else {
+  //           // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+  //           runOnJS(onTileMove)(position, emptyTilePosition);
+  //
+  //           offset.value = {
+  //             x: Math.sign(e.translationX) * tileSize,
+  //             y: 0,
+  //           };
+  //         }
+  //       } else {
+  //         if (isDoingForbiddenMoveVertically) {
+  //           offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
+  //         } else {
+  //           // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+  //           runOnJS(onTileMove)(position, emptyTilePosition);
+  //
+  //           offset.value = {
+  //             x: 0,
+  //             y: Math.sign(e.translationY) * tileSize,
+  //           };
+  //         }
+  //       }
+  //
+  //       start.value = {
+  //         x: offset.value.x,
+  //         y: offset.value.y,
+  //       };
+  //     } else {
+  //       start.value = { x: 0, y: 0 };
+  //       offset.value = { x: 0, y: 0 };
+  //     }
+  //   })
+  //   .onFinalize(() => {
+  //     isPressed.value = false;
+  //   });
+
+  let absoluteTX;
+  let absoluteTY;
+  let x;
+  let y;
+  let isDoingForbiddenMoveHorizontally;
+  let isDoingForbiddenMoveVertically;
+
   const gesture = Gesture.Pan()
     .onBegin(() => {
       isPressed.value = true;
     })
     .onUpdate((e) => {
-      const x = e.translationX + start.value.x;
-      const y = e.translationY + start.value.y;
+      x = e.translationX + start.value.x;
+      y = e.translationY + start.value.y;
 
-      const isMovedLeft = x < 0;
-      const isMovedRight = x > 0;
-      const isMovedUp = y < 0;
-      const isMovedDown = y > 0;
-
-      const isDoingForbiddenMoveHorizontally =
-        (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
-      const isDoingForbiddenMoveVertically =
-        (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+      isDoingForbiddenMoveHorizontally =
+        (!isOkToMoveLeft && x < 0) || (!isOkToMoveRight && x > 0);
+      isDoingForbiddenMoveVertically =
+        (!isOkToMoveUp && y < 0) || (!isOkToMoveDown && y > 0);
 
       if (isX && !isDoingForbiddenMoveHorizontally) {
         offset.value = {
@@ -111,30 +206,24 @@ export const Tile = ({
         };
       }
     })
+    .runOnJS(true)
     .onEnd((e) => {
-      const absoluteTX = Math.abs(e.translationX);
-      const absoluteTY = Math.abs(e.translationY);
-      const isMovedHorizontally = absoluteTX > absoluteTY;
-      const isTileBeenMoved =
-        absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
+      absoluteTX = Math.abs(e.translationX);
+      absoluteTY = Math.abs(e.translationY);
 
-      const isMovedLeft = e.translationX < 0;
-      const isMovedRight = e.translationX > 0;
-      const isMovedUp = e.translationY < 0;
-      const isMovedDown = e.translationY > 0;
-
-      const isDoingForbiddenMoveHorizontally =
-        (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
-      const isDoingForbiddenMoveVertically =
-        (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
-
-      if (isOkToMove && isTileBeenMoved) {
-        if (isMovedHorizontally) {
-          if (isDoingForbiddenMoveHorizontally) {
+      if (
+        (isOkToMove && absoluteTX > tileMoveThreshold) ||
+        absoluteTY > tileMoveThreshold
+      ) {
+        if (absoluteTX > absoluteTY) {
+          if (
+            (!isOkToMoveLeft && e.translationX < 0) ||
+            (!isOkToMoveRight && e.translationX > 0)
+          ) {
             offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
           } else {
             // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-            runOnJS(onTileMove)(position, emptyTilePosition);
+            onTileMove(position, emptyTilePosition);
 
             offset.value = {
               x: Math.sign(e.translationX) * tileSize,
@@ -142,11 +231,14 @@ export const Tile = ({
             };
           }
         } else {
-          if (isDoingForbiddenMoveVertically) {
+          if (
+            (!isOkToMoveUp && e.translationY < 0) ||
+            (!isOkToMoveDown && e.translationY > 0)
+          ) {
             offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
           } else {
             // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-            runOnJS(onTileMove)(position, emptyTilePosition);
+            onTileMove(position, emptyTilePosition);
 
             offset.value = {
               x: 0,
@@ -169,26 +261,29 @@ export const Tile = ({
     });
 
   // todo: make border the same width everywhere
-  const getBorderStyle = (position: number, borderColor: string) => {
-    const styles: ContainerStyle = {
-      borderColor,
-      borderRightWidth: 1,
-      borderBottomWidth: 1,
+  const getBorderStyle = useCallback(
+    (position: number, borderColor: string) => {
+      const styles: ContainerStyle = {
+        borderColor,
+        borderRightWidth: 1,
+        borderBottomWidth: 1,
 
-      borderLeftWidth: 1,
-      borderTopWidth: 1,
-    };
+        borderLeftWidth: 1,
+        borderTopWidth: 1,
+      };
 
-    if (position === 0 || position === 3 || position === 6) {
-      styles.borderLeftWidth = 1;
-    }
+      if (position === 0 || position === 3 || position === 6) {
+        styles.borderLeftWidth = 1;
+      }
 
-    if (position < 3) {
-      styles.borderTopWidth = 1;
-    }
+      if (position < 3) {
+        styles.borderTopWidth = 1;
+      }
 
-    return styles;
-  };
+      return styles;
+    },
+    [],
+  );
 
   if (tile === emptyTile) {
     return <View style={styles.empty} />;
