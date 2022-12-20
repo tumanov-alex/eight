@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAsyncStorage } from '@react-native-async-storage/async-storage';
 
 import { useIsGameFinished } from './useIsGameFinished';
@@ -60,6 +60,7 @@ export const useMoveCount = (tiles: tileType[]) => {
 
   useEffect(() => {
     getBestMoveCountFromStore();
+    // bestMoveCount !== Infinity && getBestMoveCountFromStore();
   }, [getBestMoveCountFromStore]);
 
   useEffect(() => {

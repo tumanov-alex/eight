@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAsyncStorage } from '@react-native-async-storage/async-storage';
 
 import { shuffleTiles } from '../utils/shuffleArray';
-import { compareArrays } from '../utils/compareArrays';
 
 export const emptyTile = null;
 export type tileType = number | typeof emptyTile;
@@ -12,18 +11,6 @@ export const useTiles = () => {
   const [tiles, setTilesState] = useState<tileType[]>([]);
   const { getItem: getTilesStore, setItem: setTilesStore } =
     useAsyncStorage('@tiles');
-  const isTilesInOrder = compareArrays(tiles, tilesInOrder);
-  const isTilesInOrderCache = useRef({
-    prev: isTilesInOrder,
-    last: isTilesInOrder,
-  });
-
-  if (isTilesInOrderCache.current.last !== isTilesInOrder) {
-    isTilesInOrderCache.current = {
-      prev: isTilesInOrderCache.current.last,
-      last: isTilesInOrder,
-    };
-  }
 
   const setTiles = useCallback(
     (nums: tileType[]) => {

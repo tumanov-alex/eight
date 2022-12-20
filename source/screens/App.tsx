@@ -33,6 +33,9 @@ export const App = () => {
     setTiles(swap(position1, position2, tiles));
   };
 
+  console.log(tiles);
+  console.log('========= tiles  ==========');
+
   const onReset = () => {
     setIsResetting(true);
     setTimeout(() => setIsResetting(false), 10000); // todo: make it work without setTimeout
@@ -52,9 +55,9 @@ export const App = () => {
       <Buttons onReset={onReset} onShuffle={onShuffle} />
 
       <Text style={{ color: 'white', alignSelf: 'center', fontSize: 40 }}>
-        {moveCount}
+        Current: {moveCount}
         {'\n'}
-        {bestMoveCount}
+        Best: {bestMoveCount}
       </Text>
 
       <Field tiles={tiles} onTileMove={onTileMove} />
@@ -62,8 +65,8 @@ export const App = () => {
   );
 
   useEffect(() => {
-    console.log(moveCount, bestMoveCount, isGameFinished)
-    console.log('========= moveCount, bestMoveCount, isGameFinished  ==========')
+    // console.log(moveCount, bestMoveCount, isGameFinished)
+    // console.log('========= moveCount, bestMoveCount, isGameFinished  ==========')
     if (isGameFinished && isResetting === false) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,

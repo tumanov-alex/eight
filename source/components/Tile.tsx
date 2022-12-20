@@ -61,7 +61,7 @@ export const Tile = ({
   const animatedStyles = useAnimatedStyle(() => {
     const style = {
       transform: [{ translateX: 0 }, { translateY: 0 }],
-      backgroundColor: isPressed.value && isOkToMove ? 'hotpink' : 'darkblue',
+      backgroundColor: isPressed.value ? 'hotpink' : 'darkblue',
       zIndex: isPressed.value ? 1 : 0,
     };
 
