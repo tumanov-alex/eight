@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, memo, useCallback } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -28,31 +28,32 @@ export const App = () => {
     useMoveCount(tiles);
   const [isResetting, setIsResetting] = useState(false);
 
+  // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = (position1, position2) => {
     incrementMoveCount();
     setTiles(swap(position1, position2, tiles));
   };
 
-  console.log(tiles);
-  console.log('========= tiles  ==========');
-
-  const onReset = () => {
+  const onReset = useCallback(() => {
     setIsResetting(true);
     setTimeout(() => setIsResetting(false), 10000); // todo: make it work without setTimeout
     setTiles(tilesInOrder);
     resetMoveCount();
     console.log('R E S E T');
-  };
-  const onShuffle = () => {
+  }, [resetMoveCount, setTiles]);
+  const onShuffle = useCallback(() => {
     setIsGameFinished(false);
     setTiles(shuffleTiles(tilesInOrder));
     resetMoveCount();
     console.log('S H U F F L E');
-  };
+  }, [resetMoveCount, setIsGameFinished, setTiles]);
 
+  const ButtonsBar = memo(() => (
+    <Buttons onReset={onReset} onShuffle={onShuffle} />
+  ));
   const Game = () => (
     <View style={styles.fieldContainer}>
-      <Buttons onReset={onReset} onShuffle={onShuffle} />
+      <ButtonsBar />
 
       <Text style={{ color: 'white', alignSelf: 'center', fontSize: 40 }}>
         Current: {moveCount}
@@ -65,8 +66,6 @@ export const App = () => {
   );
 
   useEffect(() => {
-    // console.log(moveCount, bestMoveCount, isGameFinished)
-    // console.log('========= moveCount, bestMoveCount, isGameFinished  ==========')
     if (isGameFinished && isResetting === false) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
@@ -99,5 +98,6 @@ const styles = StyleSheet.create<any>({
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'space-between',
+    paddingVertical: 50,
   },
 });

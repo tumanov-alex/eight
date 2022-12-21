@@ -29,6 +29,8 @@ export const isAxisX = (n1: number, n2: number) => {
     case 8: {
       return n2 === 6 || n2 === 7 || n2 === 8;
     }
+    default:
+      return false;
   }
 };
 
