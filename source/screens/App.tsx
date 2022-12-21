@@ -66,7 +66,7 @@ export const App = () => {
   );
 
   useEffect(() => {
-    if (isGameFinished && isResetting === false) {
+    if (isGameFinished && !isResetting) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
         bestMoveCount < Infinity

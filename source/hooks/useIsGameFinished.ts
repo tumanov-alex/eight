@@ -25,13 +25,13 @@ export const useIsGameFinished = (tiles: tileType[]) => {
     // console.log(tiles)
     // console.log('========= tiles  ==========')
 
-    if (isGameFinished === false && isTilesInOrder) {
+    if (!isGameFinished && isTilesInOrder) {
       setIsGameFinished(true);
       // setIsGameFinished((prev) => ({
       //   previous: prev.last,
       //   last: true,
       // }));
-    } else if (isGameFinished && isTilesInOrder === false) {
+    } else if (isGameFinished && !isTilesInOrder) {
       setIsGameFinished(false);
       // setIsGameFinished((prev) => ({
       //   previous: prev.last,
