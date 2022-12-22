@@ -118,6 +118,11 @@ export const Tile = ({
     });
   }, [emptyTilePosition, onTileMove, position]);
 
+  // located here to avoid wasting time on the gesture computations
+  if (tile === emptyTile) {
+    return <View style={styles.empty} />;
+  }
+
   gesture = Gesture.Pan()
     .runOnJS(true) // need it for onTileMove, InteractionManager and requestAnimationFrame
     .onBegin(() => {
@@ -218,10 +223,6 @@ export const Tile = ({
     .onFinalize(() => {
       isPressed.value = false;
     });
-
-  if (tile === emptyTile) {
-    return <View style={styles.empty} />;
-  }
 
   return (
     <GestureDetector gesture={gesture}>
