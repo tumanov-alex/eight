@@ -75,7 +75,8 @@ export const App = () => {
       !isResultShownRef.current &&
       isGameFinished &&
       !isResetting.current &&
-      moveCount > 0
+      moveCount > 0 &&
+      moveCount !== bestMoveCount
     ) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
