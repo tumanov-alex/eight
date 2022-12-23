@@ -76,13 +76,12 @@ export const App = () => {
       isGameFinished &&
       !isResetting.current &&
       moveCount > 0 &&
-      moveCount !== bestMoveCount
+      moveCount !== bestMoveCount &&
+      bestMoveCount < Infinity
     ) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
-        bestMoveCount < Infinity
-          ? `Your best score is ${bestMoveCount.toString()}`
-          : undefined,
+        `Your best score is ${bestMoveCount.toString()}`,
       );
 
       isResultShownRef.current = true;
