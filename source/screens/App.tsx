@@ -60,7 +60,7 @@ export const App = () => {
     <View style={styles.fieldContainer}>
       <ButtonsBar />
 
-      <Text style={{ color: 'white', alignSelf: 'center', fontSize: 40 }}>
+      <Text style={styles.scoreContainer}>
         Current: {moveCount}
         {'\n'}
         Best: {bestMoveCount}
@@ -71,14 +71,14 @@ export const App = () => {
   );
 
   useEffect(() => {
-    if (
-      !isResultShownRef.current &&
-      isGameFinished &&
+    const isOkToShowResult =
       !isResetting.current &&
+      !isResultShownRef.current &&
       moveCount > 0 &&
       moveCount !== bestMoveCount &&
-      bestMoveCount < Infinity
-    ) {
+      bestMoveCount < Infinity;
+
+    if (isGameFinished && isOkToShowResult) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
         `Your best score is ${bestMoveCount.toString()}`,
@@ -109,5 +109,10 @@ const styles = StyleSheet.create<any>({
     flexDirection: 'column',
     justifyContent: 'space-between',
     paddingVertical: 50,
+  },
+  scoreContainer: {
+    color: 'white',
+    alignSelf: 'center',
+    fontSize: 40,
   },
 });
