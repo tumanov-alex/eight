@@ -1,4 +1,4 @@
-import React, { useEffect, useState, memo, useCallback } from 'react';
+import React, { useEffect, memo, useCallback, useRef } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -26,7 +26,8 @@ export const App = () => {
   const { isGameFinished, setIsGameFinished } = useIsGameFinished(tiles);
   const { moveCount, bestMoveCount, incrementMoveCount, resetMoveCount } =
     useMoveCount(tiles);
-  const [isResetting, setIsResetting] = useState(false);
+  const isResetting = useRef(false);
+  const isResultShownRef = useRef(false);
 
   // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = (position1, position2) => {
@@ -35,12 +36,16 @@ export const App = () => {
   };
 
   const onReset = useCallback(() => {
-    setIsResetting(true);
-    setTimeout(() => setIsResetting(false), 10000); // todo: make it work without setTimeout
+    isResetting.current = true;
+    const timeout = setTimeout(() => {
+      isResetting.current = false;
+      clearTimeout(timeout); // todo: is this needed?
+    }, 10000); // todo: make it work without setTimeout
     setTiles(tilesInOrder);
     resetMoveCount();
     console.log('R E S E T');
   }, [resetMoveCount, setTiles]);
+
   const onShuffle = useCallback(() => {
     setIsGameFinished(false);
     setTiles(shuffleTiles(tilesInOrder));
@@ -66,21 +71,26 @@ export const App = () => {
   );
 
   useEffect(() => {
-    if (isGameFinished && !isResetting) {
+    if (
+      !isResultShownRef.current &&
+      isGameFinished &&
+      !isResetting.current &&
+      moveCount > 0
+    ) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
         bestMoveCount < Infinity
           ? `Your best score is ${bestMoveCount.toString()}`
           : undefined,
       );
+
+      isResultShownRef.current = true;
+      const timeout = setTimeout(() => {
+        isResultShownRef.current = false;
+        clearTimeout(timeout);
+      }, 5000);
     }
-  }, [
-    isGameFinished,
-    moveCount,
-    bestMoveCount,
-    setIsGameFinished,
-    isResetting,
-  ]);
+  }, [isGameFinished, moveCount, bestMoveCount, setIsGameFinished]);
 
   return (
     <SafeAreaView style={styles.container('black')}>
