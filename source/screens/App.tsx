@@ -31,7 +31,7 @@ export const App = () => {
   // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = (position1, position2) => {
     incrementMoveCount();
-    setTiles(swap(position1, position2, tiles));
+    setTiles(swap(tiles, position1, position2));
   };
 
   const onReset = useCallback(() => {
