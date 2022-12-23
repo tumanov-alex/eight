@@ -18,14 +18,14 @@ export const Field = ({ tiles, onTileMove }: Props) => {
 
   return (
     <View style={styles.container}>
-      {tiles.map((t: tileType, i: number) => (
+      {tiles.map((tile: tileType, i: number) => (
         <Tile
           emptyTilePosition={emptyTilePosition}
           isGameFinished={isGameFinished}
           onTileMove={onTileMove}
           position={i}
-          tile={t}
-          key={t}
+          tile={tile}
+          key={`key-${tile}`}
         />
       ))}
     </View>
