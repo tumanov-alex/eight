@@ -102,10 +102,8 @@ export const Tile = ({
     };
 
     if (isOkToMove) {
-      style.transform.push(
-        { translateX: offset.value.x },
-        { translateY: offset.value.y },
-      );
+      style.transform[0].translateX = offset.value.x;
+      style.transform[1].translateY = offset.value.y;
     }
 
     return style;
