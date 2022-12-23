@@ -1,8 +1,6 @@
-let resArr;
-export const swap = (position1: number, position2: number, arr: any) => {
-  resArr = [...arr];
-  resArr[position1] = arr[position2];
-  resArr[position2] = arr[position1];
-
-  return resArr;
+// swaps two elements in an array
+export const swap = <T>(arr: T[], indexA: number, indexB: number): T[] => {
+  const newArr = [...arr];
+  [newArr[indexA], newArr[indexB]] = [newArr[indexB], newArr[indexA]];
+  return newArr;
 };
