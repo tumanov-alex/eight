@@ -21,8 +21,8 @@ export const useMoveCount = (tiles: tileType[]) => {
   // todo: save to async store only when app is closing
   const setMoveCountAndStore = useCallback(
     (count: number) => {
-      setMoveCountStore(count.toString());
       setMoveCount(count);
+      setMoveCountStore(count.toString());
     },
     [setMoveCountStore],
   );

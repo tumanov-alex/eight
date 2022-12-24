@@ -1,9 +1,8 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Tile } from './Tile';
+import { Tile, tileSize } from './Tile';
 import { tileType, emptyTile } from '../hooks/useTiles';
-import { tileSize } from './Tile';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
 import { OnTileMove } from '../screens/App';
 
@@ -23,9 +22,9 @@ export const Field = ({ tiles, onTileMove }: Props) => {
           emptyTilePosition={emptyTilePosition}
           isGameFinished={isGameFinished}
           onTileMove={onTileMove}
+          key={`key-${tile}`}
           position={i}
           tile={tile}
-          key={`key-${tile}`}
         />
       ))}
     </View>

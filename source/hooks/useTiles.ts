@@ -13,9 +13,11 @@ export const useTiles = () => {
     useAsyncStorage('@tiles');
 
   const setTiles = useCallback(
-    (nums: tileType[]) => {
-      setTilesStore(JSON.stringify(nums));
-      setTilesState(nums);
+    (reorderedTiles: tileType[]) => {
+      setTilesStore(JSON.stringify(reorderedTiles));
+      setTilesState(reorderedTiles);
+      console.log(reorderedTiles);
+      console.log('========= nums  ==========');
     },
     [setTilesStore],
   );

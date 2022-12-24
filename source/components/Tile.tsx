@@ -15,8 +15,7 @@ import {
   isMovableUp,
 } from '../utils/matrix';
 import { useColors } from '../hooks/useColors';
-import { tileType } from '../hooks/useTiles';
-import { emptyTile } from '../hooks/useTiles';
+import { tileType, emptyTile } from '../hooks/useTiles';
 import { OnTileMove } from '../screens/App';
 
 interface Props {

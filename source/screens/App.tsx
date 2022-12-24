@@ -1,4 +1,4 @@
-import React, { useEffect, memo, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -15,10 +15,38 @@ import { shuffleTiles } from '../utils/shuffleArray';
 import { useColors } from '../hooks/useColors';
 import { swap } from '../utils/swap';
 import { useMoveCount } from '../hooks/useMoveCount';
-import { tilesInOrder, useTiles } from '../hooks/useTiles';
+import { tilesInOrder, tileType, useTiles } from '../hooks/useTiles';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
 
 export type OnTileMove = (position1: number, position2: number) => void;
+interface GameProps {
+  onReset: () => void;
+  onShuffle: () => void;
+  moveCount: number;
+  bestMoveCount: number;
+  tiles: tileType[];
+  onTileMove: OnTileMove;
+}
+const Game = ({
+  onReset,
+  onShuffle,
+  moveCount,
+  bestMoveCount,
+  tiles,
+  onTileMove,
+}: GameProps) => (
+  <View style={styles.fieldContainer}>
+    <Buttons onReset={onReset} onShuffle={onShuffle} />
+
+    <Text style={styles.scoreContainer}>
+      Current: {moveCount}
+      {'\n'}
+      Best: {bestMoveCount}
+    </Text>
+
+    <Field tiles={tiles} onTileMove={onTileMove} />
+  </View>
+);
 
 export const App = () => {
   const colors = useColors();
@@ -30,10 +58,13 @@ export const App = () => {
   const isResultShownRef = useRef(false);
 
   // todo: move to Tile.tsx?
-  const onTileMove: OnTileMove = (position1, position2) => {
-    incrementMoveCount();
-    setTiles(swap(tiles, position1, position2));
-  };
+  const onTileMove: OnTileMove = useCallback(
+    (position1, position2) => {
+      incrementMoveCount();
+      setTiles(swap(tiles, position1, position2));
+    },
+    [incrementMoveCount, setTiles, tiles],
+  );
 
   const onReset = useCallback(() => {
     isResetting.current = true;
@@ -52,23 +83,6 @@ export const App = () => {
     resetMoveCount();
     console.log('S H U F F L E');
   }, [resetMoveCount, setIsGameFinished, setTiles]);
-
-  const ButtonsBar = memo(() => (
-    <Buttons onReset={onReset} onShuffle={onShuffle} />
-  ));
-  const Game = () => (
-    <View style={styles.fieldContainer}>
-      <ButtonsBar />
-
-      <Text style={styles.scoreContainer}>
-        Current: {moveCount}
-        {'\n'}
-        Best: {bestMoveCount}
-      </Text>
-
-      <Field tiles={tiles} onTileMove={onTileMove} />
-    </View>
-  );
 
   useEffect(() => {
     const isOkToShowResult =
@@ -94,7 +108,18 @@ export const App = () => {
 
   return (
     <SafeAreaView style={styles.container('black')}>
-      {tiles.length ? <Game /> : <ActivityIndicator color={colors.main} />}
+      {tiles.length ? (
+        <Game // todo: pass props as object?
+          onReset={onReset}
+          onShuffle={onShuffle}
+          moveCount={moveCount}
+          bestMoveCount={bestMoveCount}
+          tiles={tiles}
+          onTileMove={onTileMove}
+        />
+      ) : (
+        <ActivityIndicator color={colors.main} />
+      )}
     </SafeAreaView>
   );
 };
