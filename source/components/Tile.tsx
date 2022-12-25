@@ -34,6 +34,12 @@ interface ContainerStyle {
   borderColor: string;
 }
 
+type AnimatedStyle = {
+  transform?: [{ translateX: number }, { translateY: number }];
+  backgroundColor: string;
+  zIndex: number;
+};
+
 export const tileSize = 100;
 const tileMoveThreshold = tileSize / 2;
 
@@ -94,15 +100,16 @@ export const Tile = ({
   const isOkToMoveDown = isMovableDown(position, emptyTilePosition);
 
   const animatedStyles = useAnimatedStyle(() => {
-    const style = {
-      transform: [{ translateX: 0 }, { translateY: 0 }],
+    const style: AnimatedStyle = {
       backgroundColor: isPressed.value ? 'hotpink' : 'darkblue',
       zIndex: isPressed.value ? 1 : 0,
     };
 
     if (isOkToMove) {
-      style.transform[0].translateX = offset.value.x;
-      style.transform[1].translateY = offset.value.y;
+      style.transform = [
+        { translateX: offset.value.x },
+        { translateY: offset.value.y },
+      ];
     }
 
     return style;
