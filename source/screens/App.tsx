@@ -17,11 +17,7 @@ import { useMoveCount } from '../hooks/useMoveCount';
 import { tilesInOrder, tileType, useTiles } from '../hooks/useTiles';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
 
-export type OnTileMove = (
-  position1: number,
-  position2: number,
-  onEnd: Function,
-) => void;
+export type OnTileMove = (position1: number, position2: number) => void;
 interface GameProps {
   onReset: () => void;
   onShuffle: () => void;
@@ -47,10 +43,9 @@ export const App = () => {
 
   // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = useCallback(
-    (position1, position2, onEnd) => {
+    (position1, position2) => {
       incrementMoveCount();
       setTiles(swap(tiles, position1, position2));
-      onEnd();
     },
     [incrementMoveCount, setTiles, tiles],
   );
@@ -76,7 +71,6 @@ export const App = () => {
       !isResetting.current &&
       !isResultShownRef.current &&
       moveCount > 0 &&
-      moveCount !== bestMoveCount &&
       bestMoveCount < Infinity;
 
     if (isGameFinished && isOkToShowResult) {
