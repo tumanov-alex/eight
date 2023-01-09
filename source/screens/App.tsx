@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   View,
   Alert,
-  Text,
 } from 'react-native';
 import 'react-native-gesture-handler'; // import before using, to avoid app crash
 
@@ -18,31 +17,20 @@ import { useMoveCount } from '../hooks/useMoveCount';
 import { tilesInOrder, tileType, useTiles } from '../hooks/useTiles';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
 
-export type OnTileMove = (position1: number, position2: number) => void;
+export type OnTileMove = (
+  position1: number,
+  position2: number,
+  onEnd: Function,
+) => void;
 interface GameProps {
   onReset: () => void;
   onShuffle: () => void;
-  moveCount: number;
-  bestMoveCount: number;
   tiles: tileType[];
   onTileMove: OnTileMove;
 }
-const Game = ({
-  onReset,
-  onShuffle,
-  moveCount,
-  bestMoveCount,
-  tiles,
-  onTileMove,
-}: GameProps) => (
+const Game = ({ onReset, onShuffle, tiles, onTileMove }: GameProps) => (
   <View style={styles.fieldContainer}>
     <Buttons onReset={onReset} onShuffle={onShuffle} />
-
-    <Text style={styles.scoreContainer}>
-      Current: {moveCount}
-      {'\n'}
-      Best: {bestMoveCount}
-    </Text>
 
     <Field tiles={tiles} onTileMove={onTileMove} />
   </View>
@@ -59,9 +47,10 @@ export const App = () => {
 
   // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = useCallback(
-    (position1, position2) => {
+    (position1, position2, onEnd) => {
       incrementMoveCount();
       setTiles(swap(tiles, position1, position2));
+      onEnd();
     },
     [incrementMoveCount, setTiles, tiles],
   );
@@ -74,14 +63,12 @@ export const App = () => {
     }, 10000); // todo: make it work without setTimeout
     setTiles(tilesInOrder);
     resetMoveCount();
-    console.log('R E S E T');
   }, [resetMoveCount, setTiles]);
 
   const onShuffle = useCallback(() => {
     setIsGameFinished(false);
     setTiles(shuffleTiles(tilesInOrder));
     resetMoveCount();
-    console.log('S H U F F L E');
   }, [resetMoveCount, setIsGameFinished, setTiles]);
 
   useEffect(() => {
@@ -112,8 +99,6 @@ export const App = () => {
         <Game // todo: pass props as object?
           onReset={onReset}
           onShuffle={onShuffle}
-          moveCount={moveCount}
-          bestMoveCount={bestMoveCount}
           tiles={tiles}
           onTileMove={onTileMove}
         />

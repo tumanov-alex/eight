@@ -38,5 +38,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: tileSize * 3, // todo: add support for matrices bigger than 3
     alignSelf: 'center',
+    paddingBottom: 150,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { Text, StyleSheet, View, InteractionManager } from 'react-native';
+import { Text, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -25,7 +25,6 @@ interface Props {
   onTileMove: OnTileMove;
   isGameFinished: boolean;
 }
-
 interface ContainerStyle {
   borderLeftWidth?: number;
   borderRightWidth?: number;
@@ -33,11 +32,14 @@ interface ContainerStyle {
   borderBottomWidth?: number;
   borderColor: string;
 }
-
 type AnimatedStyle = {
   transform?: [{ translateX: number }, { translateY: number }];
   backgroundColor: string;
   zIndex: number;
+};
+type Coordinates = {
+  x: number;
+  y: number;
 };
 
 export const tileSize = 100;
@@ -113,14 +115,23 @@ export const Tile = ({
     }
 
     return style;
-  });
+  }, [isPressed.value, offset.value, isOkToMove]);
 
-  const onTileMoveCb = useCallback(() => {
-    // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-    InteractionManager.runAfterInteractions(() => {
-      onTileMove(position, emptyTilePosition);
-    });
-  }, [emptyTilePosition, onTileMove, position]);
+  const onTileMoveSuccess = useCallback(
+    (coords: Coordinates) => {
+      // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+      requestAnimationFrame(() => {
+        offset.value = coords;
+
+        onTileMove(
+          position,
+          emptyTilePosition,
+          () => (offset.value = { x: 0, y: 0 }),
+        );
+      });
+    },
+    [emptyTilePosition, offset, onTileMove, position],
+  );
 
   // located here to avoid wasting time on the gesture computations
   if (tile === emptyTile) {
@@ -128,101 +139,89 @@ export const Tile = ({
   }
 
   gesture = Gesture.Pan()
-    .runOnJS(true) // need it for onTileMove, InteractionManager and requestAnimationFrame
+    .runOnJS(true) // need it for onTileMove and requestAnimationFrame
     .onBegin(() => {
       isPressed.value = true;
     })
     .onUpdate((e) => {
-      InteractionManager.runAfterInteractions(() => {
-        x = e.translationX + start.value.x;
-        y = e.translationY + start.value.y;
+      x = e.translationX + start.value.x;
+      y = e.translationY + start.value.y;
 
-        isMovedLeft = x < 0;
-        isMovedRight = x > 0;
-        isMovedUp = y < 0;
-        isMovedDown = y > 0;
+      isMovedLeft = x < 0;
+      isMovedRight = x > 0;
+      isMovedUp = y < 0;
+      isMovedDown = y > 0;
 
-        isDoingForbiddenMoveHorizontally =
-          (!isOkToMoveLeft && isMovedLeft) ||
-          (!isOkToMoveRight && isMovedRight);
-        isDoingForbiddenMoveVertically =
-          (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+      isDoingForbiddenMoveHorizontally =
+        (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
+      isDoingForbiddenMoveVertically =
+        (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
 
-        if (isX && !isDoingForbiddenMoveHorizontally) {
-          offset.value = {
-            x:
-              Math.abs(e.translationX) > tileSize // if moving further than one tile
-                ? Math.sign(e.translationX) * tileSize // then limit to one tile
-                : x, // else move to an actual value
-            y: start.value.y,
-          };
-        } else if (isY && !isDoingForbiddenMoveVertically) {
-          offset.value = {
-            x: start.value.x,
-            y:
-              Math.abs(e.translationY) > tileSize // if moving further than one tile
-                ? Math.sign(e.translationY) * tileSize // then limit to one tile
-                : y, // else move to an actual value
-          };
-        }
-      });
+      if (isX && !isDoingForbiddenMoveHorizontally) {
+        offset.value = {
+          x:
+            Math.abs(e.translationX) > tileSize // if moving further than one tile
+              ? Math.sign(e.translationX) * tileSize // then limit to one tile
+              : x, // else move to an actual value
+          y: start.value.y,
+        };
+      } else if (isY && !isDoingForbiddenMoveVertically) {
+        offset.value = {
+          x: start.value.x,
+          y:
+            Math.abs(e.translationY) > tileSize // if moving further than one tile
+              ? Math.sign(e.translationY) * tileSize // then limit to one tile
+              : y, // else move to an actual value
+        };
+      }
     })
     .onEnd((e) => {
-      requestAnimationFrame(() => {
-        absoluteTX = Math.abs(e.translationX);
-        absoluteTY = Math.abs(e.translationY);
-        isTileBeenMoved =
-          absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
+      absoluteTX = Math.abs(e.translationX);
+      absoluteTY = Math.abs(e.translationY);
+      isTileBeenMoved =
+        absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
 
-        if (isOkToMove && isTileBeenMoved) {
-          isMovedHorizontally = absoluteTX > absoluteTY;
+      if (isOkToMove && isTileBeenMoved) {
+        isMovedHorizontally = absoluteTX > absoluteTY;
 
-          if (isMovedHorizontally) {
-            isMovedLeft = e.translationX < 0;
-            isMovedRight = e.translationX > 0;
+        if (isMovedHorizontally) {
+          isMovedLeft = e.translationX < 0;
+          isMovedRight = e.translationX > 0;
 
-            isDoingForbiddenMoveHorizontally =
-              (!isOkToMoveLeft && isMovedLeft) ||
-              (!isOkToMoveRight && isMovedRight);
+          isDoingForbiddenMoveHorizontally =
+            (!isOkToMoveLeft && isMovedLeft) ||
+            (!isOkToMoveRight && isMovedRight);
 
-            if (isDoingForbiddenMoveHorizontally) {
-              offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
-            } else {
-              onTileMoveCb();
-
-              offset.value = {
-                x: Math.sign(e.translationX) * tileSize,
-                y: 0,
-              };
-            }
+          if (isDoingForbiddenMoveHorizontally) {
+            start.value = { x: 0, y: 0 };
+            offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
-            isMovedUp = e.translationY < 0;
-            isMovedDown = e.translationY > 0;
-
-            isDoingForbiddenMoveVertically =
-              (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
-
-            if (isDoingForbiddenMoveVertically) {
-              offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point
-            } else {
-              onTileMoveCb();
-
-              offset.value = {
-                x: 0,
-                y: Math.sign(e.translationY) * tileSize,
-              };
-            }
+            onTileMoveSuccess({
+              x: Math.sign(e.translationX) * tileSize,
+              y: 0,
+            });
           }
-
-          start.value = {
-            x: offset.value.x,
-            y: offset.value.y,
-          };
         } else {
-          start.value = { x: 0, y: 0 };
-          offset.value = { x: 0, y: 0 };
+          isMovedUp = e.translationY < 0;
+          isMovedDown = e.translationY > 0;
+
+          isDoingForbiddenMoveVertically =
+            (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+
+          if (isDoingForbiddenMoveVertically) {
+            start.value = { x: 0, y: 0 };
+            offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
+          } else {
+            onTileMoveSuccess({
+              x: 0,
+              y: Math.sign(e.translationY) * tileSize,
+            });
+          }
         }
-      });
+      } else {
+        start.value = { x: 0, y: 0 };
+        offset.value = { x: 0, y: 0 };
+      }
     })
     .onFinalize(() => {
       isPressed.value = false;

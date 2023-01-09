@@ -4,11 +4,6 @@ import { useAsyncStorage } from '@react-native-async-storage/async-storage';
 import { useIsGameFinished } from './useIsGameFinished';
 import { tileType } from './useTiles';
 
-interface MoveCount {
-  last: number;
-  previous: number;
-}
-
 export const useMoveCount = (tiles: tileType[]) => {
   const [moveCount, setMoveCount] = useState(0);
   const { setItem: setMoveCountStore, getItem: getMoveCountStore } =

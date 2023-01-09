@@ -16,8 +16,6 @@ export const useTiles = () => {
     (reorderedTiles: tileType[]) => {
       setTilesStore(JSON.stringify(reorderedTiles));
       setTilesState(reorderedTiles);
-      console.log(reorderedTiles);
-      console.log('========= nums  ==========');
     },
     [setTilesStore],
   );
