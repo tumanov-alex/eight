@@ -123,10 +123,8 @@ export const Tile = ({
       requestAnimationFrame(() => {
         offset.value = coords;
 
-        onTileMove(position, emptyTilePosition);
-
-        // todo: execute after onTileMove is finished
-        requestAnimationFrame(() => {
+        onTileMove(position, emptyTilePosition, () => {
+          // todo: execute after onTileMove is finished
           offset.value = { x: 0, y: 0 };
         });
       });

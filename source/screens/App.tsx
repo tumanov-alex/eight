@@ -28,6 +28,7 @@ interface GameProps {
   tiles: tileType[];
   onTileMove: OnTileMove;
 }
+
 const Game = ({ onReset, onShuffle, tiles, onTileMove }: GameProps) => (
   <View style={styles.fieldContainer}>
     <Buttons onReset={onReset} onShuffle={onShuffle} />
@@ -44,13 +45,14 @@ export const App = () => {
     useMoveCount(tiles);
   const isResetting = useRef(false);
   const isResultShownRef = useRef(false);
+  const extraCallbackRef = useRef<Function>(() => {});
 
   // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = useCallback(
     (position1, position2, extraCallback) => {
+      extraCallbackRef.current = extraCallback;
       incrementMoveCount();
       setTiles(swap(tiles, position1, position2));
-      extraCallback();
     },
     [incrementMoveCount, setTiles, tiles],
   );
@@ -92,6 +94,10 @@ export const App = () => {
       }, 5000);
     }
   }, [isGameFinished, moveCount, bestMoveCount, setIsGameFinished]);
+
+  useEffect(() => {
+    extraCallbackRef.current();
+  }, [tiles]);
 
   return (
     <SafeAreaView style={styles.container('black')}>
