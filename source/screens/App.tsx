@@ -74,12 +74,11 @@ export const App = () => {
   }, [resetMoveCount, setIsGameFinished, setTiles]);
 
   useEffect(() => {
-    const isOkToShowResult =
-      !isResetting.current &&
-      !isResultShownRef.current &&
-      moveCount > 0 &&
-      moveCount !== bestMoveCount &&
-      bestMoveCount < Infinity;
+    const isNotResettingOrShowingResult =
+      !isResetting.current && !isResultShownRef.current;
+    const isEndGameState =
+      moveCount > 0 && moveCount !== bestMoveCount && bestMoveCount < Infinity;
+    const isOkToShowResult = isNotResettingOrShowingResult && isEndGameState;
 
     if (isGameFinished && isOkToShowResult) {
       Alert.alert(
