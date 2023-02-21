@@ -44,7 +44,7 @@ export const App = () => {
   const { moveCount, bestMoveCount, incrementMoveCount, resetMoveCount } =
     useMoveCount(tiles);
   const isResetting = useRef(false);
-  const isResultShownRef = useRef(false);
+  const isEndGameMessageShownRef = useRef(false);
   const extraCallbackRef = useRef<Function>(() => {});
 
   // todo: move to Tile.tsx?
@@ -75,23 +75,24 @@ export const App = () => {
 
   useEffect(() => {
     const isNotResettingOrShowingResult =
-      !isResetting.current && !isResultShownRef.current;
+      !isResetting.current && !isEndGameMessageShownRef.current;
     const isEndGameState =
       isGameFinished &&
       moveCount > 0 &&
       moveCount !== bestMoveCount &&
       bestMoveCount < Infinity;
-    const isOkToShowResult = isNotResettingOrShowingResult && isEndGameState;
+    const isOkToShowEndGameMessage =
+      isNotResettingOrShowingResult && isEndGameState;
 
-    if (isOkToShowResult) {
+    if (isOkToShowEndGameMessage) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
         `Your best score is ${bestMoveCount.toString()}`,
       );
 
-      isResultShownRef.current = true;
+      isEndGameMessageShownRef.current = true;
       const timeout = setTimeout(() => {
-        isResultShownRef.current = false;
+        isEndGameMessageShownRef.current = false;
         clearTimeout(timeout);
       }, 5000);
     }
