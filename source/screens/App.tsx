@@ -77,10 +77,13 @@ export const App = () => {
     const isNotResettingOrShowingResult =
       !isResetting.current && !isResultShownRef.current;
     const isEndGameState =
-      moveCount > 0 && moveCount !== bestMoveCount && bestMoveCount < Infinity;
+      isGameFinished &&
+      moveCount > 0 &&
+      moveCount !== bestMoveCount &&
+      bestMoveCount < Infinity;
     const isOkToShowResult = isNotResettingOrShowingResult && isEndGameState;
 
-    if (isGameFinished && isOkToShowResult) {
+    if (isOkToShowResult) {
       Alert.alert(
         `Your score is ${moveCount.toString()}`,
         `Your best score is ${bestMoveCount.toString()}`,
