@@ -22,7 +22,7 @@ export const Field = ({ tiles, onTileMove }: Props) => {
           emptyTilePosition={emptyTilePosition}
           isGameFinished={isGameFinished}
           onTileMove={onTileMove}
-          key={`key-${tile}`}
+          key={`key-${tile}`} // todo: fix keys changing on every render
           position={i}
           tile={tile}
         />

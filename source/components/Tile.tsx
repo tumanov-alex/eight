@@ -82,6 +82,7 @@ let isMovedDown;
 let isMovedHorizontally;
 let isTileBeenMoved;
 
+// todo: why double render?
 export const Tile = ({
   tile,
   position,
@@ -122,6 +123,7 @@ export const Tile = ({
       // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
       requestAnimationFrame(() => {
         offset.value = coords;
+        // offset.value = { x: 0, y: 0 };
 
         onTileMove(position, emptyTilePosition, () => {
           // todo: execute after onTileMove is finished
