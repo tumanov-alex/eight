@@ -37,10 +37,6 @@ type AnimatedStyle = {
   backgroundColor: string;
   zIndex: number;
 };
-type Coordinates = {
-  x: number;
-  y: number;
-};
 
 export const tileSize = 100;
 const tileMoveThreshold = tileSize / 2;
@@ -93,10 +89,10 @@ export const Tile = ({
   const colors = useColors();
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
-  const start = useSharedValue({ x: 0, y: 0 });
-  const isX = isAxisX(position, emptyTilePosition); // todo: rename to smth like "isOnXAxisWithEmptyTile"
-  const isY = isAxisY(position, emptyTilePosition); // todo: rename to smth like "isOnXAxisWithEmptyTile"
-  const isOkToMove = !isGameFinished && (isX || isY); // todo: rename to account for flags below
+  const isHorizontalWithEmptyTile = isAxisX(position, emptyTilePosition);
+  const isVerticalWithEmptyTile = isAxisY(position, emptyTilePosition);
+  const isOkToMoveOnXY =
+    !isGameFinished && (isHorizontalWithEmptyTile || isVerticalWithEmptyTile);
   const isOkToMoveRight = isMovableRight(position, emptyTilePosition);
   const isOkToMoveLeft = isMovableLeft(position, emptyTilePosition);
   const isOkToMoveUp = isMovableUp(position, emptyTilePosition);
@@ -108,7 +104,7 @@ export const Tile = ({
       zIndex: isPressed.value ? 1 : 0,
     };
 
-    if (isOkToMove) {
+    if (isOkToMoveOnXY) {
       style.transform = [
         { translateX: offset.value.x },
         { translateY: offset.value.y },
@@ -116,23 +112,14 @@ export const Tile = ({
     }
 
     return style;
-  }, [isPressed.value, offset.value, isOkToMove]);
+  }, [isPressed.value, offset.value, isOkToMoveOnXY]);
 
-  const onTileMoveSuccess = useCallback(
-    (coords: Coordinates) => {
-      // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
-      requestAnimationFrame(() => {
-        offset.value = coords;
-        // offset.value = { x: 0, y: 0 };
-
-        onTileMove(position, emptyTilePosition, () => {
-          // todo: execute after onTileMove is finished
-          offset.value = { x: 0, y: 0 };
-        });
-      });
-    },
-    [emptyTilePosition, offset, onTileMove, position],
-  );
+  const onTileMoveSuccess = useCallback(() => {
+    // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
+    onTileMove(position, emptyTilePosition, () => {
+      offset.value = { x: 0, y: 0 };
+    });
+  }, [emptyTilePosition, offset, onTileMove, position]);
 
   // located here to avoid wasting time on the gesture computations
   if (tile === emptyTile) {
@@ -145,8 +132,8 @@ export const Tile = ({
       isPressed.value = true;
     })
     .onUpdate((e) => {
-      x = e.translationX + start.value.x;
-      y = e.translationY + start.value.y;
+      x = e.translationX;
+      y = e.translationY;
 
       isMovedLeft = x < 0;
       isMovedRight = x > 0;
@@ -158,17 +145,17 @@ export const Tile = ({
       isDoingForbiddenMoveVertically =
         (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
 
-      if (isX && !isDoingForbiddenMoveHorizontally) {
+      if (isHorizontalWithEmptyTile && !isDoingForbiddenMoveHorizontally) {
         offset.value = {
           x:
             Math.abs(e.translationX) > tileSize // if moving further than one tile
               ? Math.sign(e.translationX) * tileSize // then limit to one tile
               : x, // else move to an actual value
-          y: start.value.y,
+          y: 0,
         };
-      } else if (isY && !isDoingForbiddenMoveVertically) {
+      } else if (isVerticalWithEmptyTile && !isDoingForbiddenMoveVertically) {
         offset.value = {
-          x: start.value.x,
+          x: 0,
           y:
             Math.abs(e.translationY) > tileSize // if moving further than one tile
               ? Math.sign(e.translationY) * tileSize // then limit to one tile
@@ -182,7 +169,7 @@ export const Tile = ({
       isTileBeenMoved =
         absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
 
-      if (isOkToMove && isTileBeenMoved) {
+      if (isOkToMoveOnXY && isTileBeenMoved) {
         isMovedHorizontally = absoluteTX > absoluteTY;
 
         if (isMovedHorizontally) {
@@ -194,13 +181,9 @@ export const Tile = ({
             (!isOkToMoveRight && isMovedRight);
 
           if (isDoingForbiddenMoveHorizontally) {
-            start.value = { x: 0, y: 0 };
             offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
-            onTileMoveSuccess({
-              x: Math.sign(e.translationX) * tileSize,
-              y: 0,
-            });
+            onTileMoveSuccess();
           }
         } else {
           isMovedUp = e.translationY < 0;
@@ -210,17 +193,12 @@ export const Tile = ({
             (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
 
           if (isDoingForbiddenMoveVertically) {
-            start.value = { x: 0, y: 0 };
             offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
-            onTileMoveSuccess({
-              x: 0,
-              y: Math.sign(e.translationY) * tileSize,
-            });
+            onTileMoveSuccess();
           }
         }
       } else {
-        start.value = { x: 0, y: 0 };
         offset.value = { x: 0, y: 0 };
       }
     })

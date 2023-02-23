@@ -20,7 +20,7 @@ import { useIsGameFinished } from '../hooks/useIsGameFinished';
 export type OnTileMove = (
   position1: number,
   position2: number,
-  extraCallback: Function,
+  postCallback: Function,
 ) => void;
 interface GameProps {
   onReset: () => void;
@@ -45,12 +45,12 @@ export const App = () => {
     useMoveCount(tiles);
   const isResetting = useRef(false);
   const isEndGameMessageShownRef = useRef(false);
-  const extraCallbackRef = useRef<Function>(() => {});
+  const onTileMovePostCallbackRef = useRef<Function>(() => {});
 
   // todo: move to Tile.tsx?
   const onTileMove: OnTileMove = useCallback(
-    (position1, position2, extraCallback) => {
-      extraCallbackRef.current = extraCallback;
+    (position1, position2, postCallback) => {
+      onTileMovePostCallbackRef.current = postCallback;
       incrementMoveCount();
       setTiles(swap(tiles, position1, position2));
     },
@@ -99,7 +99,7 @@ export const App = () => {
   }, [isGameFinished, moveCount, bestMoveCount, setIsGameFinished]);
 
   useEffect(() => {
-    extraCallbackRef.current();
+    onTileMovePostCallbackRef.current();
   }, [tiles]);
 
   return (
