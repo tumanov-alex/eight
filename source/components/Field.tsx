@@ -7,11 +7,11 @@ interface Props {
   setNumbers: Function;
 }
 
-export const Field = ({ numbers, setNumbers }: Props) => {
+export const Field = ({ numbers, setNumbers, swapTiles }: Props) => {
   return (
     <View style={styles.container}>
       {numbers.map((n: number, i: number) =>
-        n > 0 ? <Tile position={i} number={n} key={n} /> : null,
+        n > 0 ? <Tile swapTiles={swapTiles} position={i} number={n} key={n} /> : null,
       )}
     </View>
   );

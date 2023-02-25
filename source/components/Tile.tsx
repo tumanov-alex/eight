@@ -4,6 +4,7 @@ import { useColors } from '../hooks/useColors';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  useDerivedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -25,7 +26,7 @@ interface ContainerStyle {
 const size = 100;
 const tileMoveThreshold = size / 2;
 
-export const Tile = ({ number, position }: Props) => {
+export const Tile = ({ number, position, swapTiles }: Props) => {
   const colors = useColors();
 
   const isPressed = useSharedValue(false);
@@ -62,10 +63,8 @@ export const Tile = ({ number, position }: Props) => {
             ? Math.sign(e.translationY) * size
             : y,
       };
-      console.log(offset.value);
     })
     .onEnd((e) => {
-      // console.log(e.translationX, e.translationY)
       const absoluteTX = Math.abs(e.translationX);
       const absoluteTY = Math.abs(e.translationY);
       const isTileBeenMoved =
@@ -97,12 +96,12 @@ export const Tile = ({ number, position }: Props) => {
             y: start.value.y + Math.sign(e.translationY) * size,
           };
         }
-        // console.log(offset.value);
 
         start.value = {
           x: offset.value.x,
           y: offset.value.y,
         };
+        console.log(start.value)
         // console.log(start.value)
       } else {
         start.value = { x: 0, y: 0 };
@@ -111,7 +110,6 @@ export const Tile = ({ number, position }: Props) => {
     })
     .onFinalize(() => {
       isPressed.value = false;
-      // console.log('=========   ==========');
     });
 
   const getBorderStyle = (position: number, borderColor: string) => {
