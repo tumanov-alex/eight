@@ -183,7 +183,7 @@ export const Tile = ({
           if (isDoingForbiddenMoveHorizontally) {
             offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
-            onTileMoveSuccess();
+            // onTileMoveSuccess();
           }
         } else {
           isMovedUp = e.translationY < 0;
@@ -195,7 +195,7 @@ export const Tile = ({
           if (isDoingForbiddenMoveVertically) {
             offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
-            onTileMoveSuccess();
+            // onTileMoveSuccess();
           }
         }
       } else {
