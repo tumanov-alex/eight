@@ -44,8 +44,13 @@ export const App = () => {
 
   const [numbers, setNumbersState] = useState<number[]>([]);
   const tiles = useSharedValue(numbers);
-  const emptyTilePosition = useDerivedValue(() =>
-    tiles.value.findIndex((n) => n === emptyTile),
+  const emptyTilePosition = useDerivedValue(() => {
+    const res = tiles.value.findIndex((n, i) => {
+      return n === emptyTile;
+    });
+    return res;
+    },
+    [tiles.value]
   );
   const setNumbers = useCallback(
     (nums: number[]) => {
