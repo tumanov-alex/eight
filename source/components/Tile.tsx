@@ -3,9 +3,19 @@ import { Text, StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
+  useDerivedValue,
+  runOnJS,
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
+// import {
+//   isAxisX,
+//   isAxisY,
+//   isMovableDown,
+//   isMovableLeft,
+//   isMovableRight,
+//   isMovableUp,
+// } from '../utils/matrix';
 import {
   isAxisX,
   isAxisY,
@@ -13,10 +23,11 @@ import {
   isMovableLeft,
   isMovableRight,
   isMovableUp,
-} from '../utils/matrix';
+} from '../utils/matrixShared';
 import { useColors } from '../hooks/useColors';
 import { tileType, emptyTile } from '../hooks/useTiles';
 import { OnTileMove } from '../screens/App';
+import { useTilesSharedValue } from '../hooks/useTilesSharedValue';
 
 interface Props {
   tile: tileType;
@@ -81,22 +92,61 @@ let isTileBeenMoved;
 // todo: why double render?
 export const Tile = ({
   tile,
+  tilesSharedValue,
+  emptyTileIndex,
   position,
   emptyTilePosition,
+  isGameFinishedShared,
   onTileMove,
   isGameFinished,
+  swapTiles,
 }: Props) => {
+  const { emptyTileIndex: empty } = useTilesSharedValue();
+  const tilePosition = useDerivedValue(() => {
+    return tilesSharedValue.value.findIndex((t) => t === tile);
+  }, [tilesSharedValue.value]);
+  const isHorizontalWithEmptyTileSharedValue = useDerivedValue(() => {
+    return runOnJS(() => isAxisX(tilePosition.value, emptyTileIndex.value));
+  }, [tilePosition.value, emptyTileIndex.value]);
+  const isVerticalWithEmptyTileSharedValue = useDerivedValue(() => {
+    return runOnJS(() => isAxisY(tilePosition.value, emptyTileIndex.value));
+  }, [tilePosition.value, emptyTileIndex.value]);
+  const isOkToMoveOnXYSharedValue = useDerivedValue(() => {
+    return (
+      !isGameFinishedShared.value &&
+      (isHorizontalWithEmptyTileSharedValue.value ||
+        isVerticalWithEmptyTileSharedValue.value)
+    );
+  }, [
+    isGameFinishedShared.value,
+    isHorizontalWithEmptyTileSharedValue.value,
+    isVerticalWithEmptyTileSharedValue.value,
+  ]);
+  const isOkToMoveRightSharedValue = useDerivedValue(() => {
+    return isMovableRight(tilePosition.value, emptyTileIndex.value);
+  }, [tilePosition.value, emptyTileIndex.value]);
+  const isOkToMoveLeftSharedValue = useDerivedValue(() => {
+    return isMovableLeft(tilePosition.value, emptyTileIndex.value);
+  }, [tilePosition.value, emptyTileIndex.value]);
+  const isOkToMoveUpSharedValue = useDerivedValue(() => {
+    return isMovableUp(tilePosition.value, emptyTileIndex.value);
+  }, [tilePosition.value, emptyTileIndex.value]);
+  const isOkToMoveDownSharedValue = useDerivedValue(() => {
+    return isMovableDown(tilePosition.value, emptyTileIndex.value);
+  }, [tilePosition.value, emptyTileIndex.value]);
+
   const colors = useColors();
   const isPressed = useSharedValue(false);
   const offset = useSharedValue({ x: 0, y: 0 });
-  const isHorizontalWithEmptyTile = isAxisX(position, emptyTilePosition);
-  const isVerticalWithEmptyTile = isAxisY(position, emptyTilePosition);
-  const isOkToMoveOnXY =
-    !isGameFinished && (isHorizontalWithEmptyTile || isVerticalWithEmptyTile);
-  const isOkToMoveRight = isMovableRight(position, emptyTilePosition);
-  const isOkToMoveLeft = isMovableLeft(position, emptyTilePosition);
-  const isOkToMoveUp = isMovableUp(position, emptyTilePosition);
-  const isOkToMoveDown = isMovableDown(position, emptyTilePosition);
+  const start = useSharedValue({ x: 0, y: 0 });
+  // const isHorizontalWithEmptyTile = isAxisX(position, emptyTilePosition);
+  // const isVerticalWithEmptyTile = isAxisY(position, emptyTilePosition);
+  // const isOkToMoveOnXY =
+  //   !isGameFinished && (isHorizontalWithEmptyTile || isVerticalWithEmptyTile);
+  // const isOkToMoveRight = isMovableRight(position, emptyTilePosition);
+  // const isOkToMoveLeft = isMovableLeft(position, emptyTilePosition);
+  // const isOkToMoveUp = isMovableUp(position, emptyTilePosition);
+  // const isOkToMoveDown = isMovableDown(position, emptyTilePosition);
 
   const animatedStyles = useAnimatedStyle(() => {
     const style: AnimatedStyle = {
@@ -104,7 +154,7 @@ export const Tile = ({
       zIndex: isPressed.value ? 1 : 0,
     };
 
-    if (isOkToMoveOnXY) {
+    if (isOkToMoveOnXYSharedValue.value) {
       style.transform = [
         { translateX: offset.value.x },
         { translateY: offset.value.y },
@@ -112,7 +162,7 @@ export const Tile = ({
     }
 
     return style;
-  }, [isPressed.value, offset.value, isOkToMoveOnXY]);
+  }, [isPressed.value, offset.value, isOkToMoveOnXYSharedValue.value]);
 
   const onTileMoveSuccess = useCallback(() => {
     // todo: make position1 an array? In that way onTimeMove can handle the "move two as one" case
@@ -127,38 +177,43 @@ export const Tile = ({
   }
 
   gesture = Gesture.Pan()
-    .runOnJS(true) // need it for onTileMove and requestAnimationFrame
     .onBegin(() => {
       isPressed.value = true;
     })
     .onUpdate((e) => {
-      x = e.translationX;
-      y = e.translationY;
+      x = e.translationX + start.value.x;
+      y = e.translationY + start.value.y;
 
-      isMovedLeft = x < 0;
-      isMovedRight = x > 0;
-      isMovedUp = y < 0;
-      isMovedDown = y > 0;
+      isMovedLeft = e.translationX < 0;
+      isMovedRight = e.translationX > 0;
+      isMovedUp = e.translationY < 0;
+      isMovedDown = e.translationY > 0;
 
       isDoingForbiddenMoveHorizontally =
-        (!isOkToMoveLeft && isMovedLeft) || (!isOkToMoveRight && isMovedRight);
+        (!isOkToMoveLeftSharedValue.value && isMovedLeft) ||
+        (!isOkToMoveRightSharedValue.value && isMovedRight);
       isDoingForbiddenMoveVertically =
-        (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+        (!isOkToMoveUpSharedValue.value && isMovedUp) ||
+        (!isOkToMoveDownSharedValue.value && isMovedDown);
 
-      if (isHorizontalWithEmptyTile && !isDoingForbiddenMoveHorizontally) {
+      console.log(isHorizontalWithEmptyTileSharedValue.value)
+      console.log(isVerticalWithEmptyTileSharedValue.value)
+        console.log('=========   ==========')
+
+      if (isHorizontalWithEmptyTileSharedValue.value) {
         offset.value = {
           x:
-            Math.abs(e.translationX) > tileSize // if moving further than one tile
-              ? Math.sign(e.translationX) * tileSize // then limit to one tile
+            Math.abs(x) > tileSize // if moving further than one tile
+              ? Math.sign(x) * tileSize // then limit to one tile
               : x, // else move to an actual value
           y: 0,
         };
-      } else if (isVerticalWithEmptyTile && !isDoingForbiddenMoveVertically) {
+      } else if (isVerticalWithEmptyTileSharedValue.value) {
         offset.value = {
           x: 0,
           y:
-            Math.abs(e.translationY) > tileSize // if moving further than one tile
-              ? Math.sign(e.translationY) * tileSize // then limit to one tile
+            Math.abs(y) > tileSize // if moving further than one tile
+              ? Math.sign(y) * tileSize // then limit to one tile
               : y, // else move to an actual value
         };
       }
@@ -169,7 +224,7 @@ export const Tile = ({
       isTileBeenMoved =
         absoluteTX > tileMoveThreshold || absoluteTY > tileMoveThreshold;
 
-      if (isOkToMoveOnXY && isTileBeenMoved) {
+      if (isOkToMoveOnXYSharedValue.value && isTileBeenMoved) {
         isMovedHorizontally = absoluteTX > absoluteTY;
 
         if (isMovedHorizontally) {
@@ -177,29 +232,55 @@ export const Tile = ({
           isMovedRight = e.translationX > 0;
 
           isDoingForbiddenMoveHorizontally =
-            (!isOkToMoveLeft && isMovedLeft) ||
-            (!isOkToMoveRight && isMovedRight);
+            (!isOkToMoveLeftSharedValue.value && isMovedLeft) ||
+            (!isOkToMoveRightSharedValue.value && isMovedRight);
 
           if (isDoingForbiddenMoveHorizontally) {
-            offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
+            // offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
             // onTileMoveSuccess();
+
+            swapTiles(tilePosition.value, emptyTileIndex.value);
+            // console.log(empty.value)
+            offset.value = {
+              x: start.value.x + Math.sign(e.translationX) * tileSize,
+              y:
+                absoluteTY > tileMoveThreshold
+                  ? Math.sign(offset.value.y) *
+                    tileSize *
+                    Math.floor(absoluteTY / tileSize)
+                  : 0,
+            };
           }
         } else {
           isMovedUp = e.translationY < 0;
           isMovedDown = e.translationY > 0;
 
           isDoingForbiddenMoveVertically =
-            (!isOkToMoveUp && isMovedUp) || (!isOkToMoveDown && isMovedDown);
+            (!isOkToMoveUpSharedValue.value && isMovedUp) ||
+            (!isOkToMoveDownSharedValue.value && isMovedDown);
 
           if (isDoingForbiddenMoveVertically) {
-            offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
+            // offset.value = { x: 0, y: 0 }; // if tile is being put back to the starting position and touch is interrupted before finish, then put it back to the starting point;
           } else {
             // onTileMoveSuccess();
+
+            swapTiles(tilePosition.value, emptyTileIndex.value);
+            // console.log(empty.value)
+            offset.value = {
+              x:
+                absoluteTX > tileMoveThreshold
+                  ? Math.sign(offset.value.x) *
+                    tileSize *
+                    Math.floor(absoluteTX / tileSize)
+                  : 0,
+              y: start.value.y + Math.sign(e.translationY) * tileSize,
+            };
           }
         }
       } else {
         offset.value = { x: 0, y: 0 };
+        start.value = { x: 0, y: 0 };
       }
     })
     .onFinalize(() => {

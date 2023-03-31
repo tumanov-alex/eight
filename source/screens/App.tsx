@@ -16,6 +16,7 @@ import { swap } from '../utils/swap';
 import { useMoveCount } from '../hooks/useMoveCount';
 import { tilesInOrder, tileType, useTiles } from '../hooks/useTiles';
 import { useIsGameFinished } from '../hooks/useIsGameFinished';
+import { useTilesSharedValue } from '../hooks/useTilesSharedValue';
 
 export type OnTileMove = (
   position1: number,
@@ -29,16 +30,40 @@ interface GameProps {
   onTileMove: OnTileMove;
 }
 
-const Game = ({ onReset, onShuffle, tiles, onTileMove }: GameProps) => (
+const Game = ({
+  onReset,
+  onShuffle,
+  tiles,
+  tilesSharedValue,
+  emptyTileIndex,
+  isGameFinishedShared,
+  onTileMove,
+  swapTiles,
+}: GameProps) => (
   <View style={styles.fieldContainer}>
     <Buttons onReset={onReset} onShuffle={onShuffle} />
 
-    <Field tiles={tiles} onTileMove={onTileMove} />
+    <Field
+      tiles={tiles}
+      tilesSharedValue={tilesSharedValue}
+      emptyTileIndex={emptyTileIndex}
+      isGameFinishedShared={isGameFinishedShared}
+      onTileMove={onTileMove}
+      swapTiles={swapTiles}
+    />
   </View>
 );
 
 export const App = () => {
   const colors = useColors();
+  const {
+    tilesSharedValue,
+    reset,
+    shuffle,
+    emptyTileIndex,
+    isGameFinishedShared,
+    swapTiles,
+  } = useTilesSharedValue();
   const { tiles, setTiles } = useTiles(); // todo: move to Tile.tsx?
   const { isGameFinished, setIsGameFinished } = useIsGameFinished(tiles);
   const { moveCount, bestMoveCount, incrementMoveCount, resetMoveCount } =
@@ -65,13 +90,15 @@ export const App = () => {
     }, 10000); // todo: make it work without setTimeout
     setTiles(tilesInOrder);
     resetMoveCount();
-  }, [resetMoveCount, setTiles]);
+    reset();
+  }, [reset, resetMoveCount, setTiles]);
 
   const onShuffle = useCallback(() => {
     setIsGameFinished(false);
     setTiles(shuffleTiles(tilesInOrder));
     resetMoveCount();
-  }, [resetMoveCount, setIsGameFinished, setTiles]);
+    shuffle();
+  }, [resetMoveCount, setIsGameFinished, setTiles, shuffle]);
 
   useEffect(() => {
     const isNotResettingOrShowingResult =
@@ -109,6 +136,10 @@ export const App = () => {
           onReset={onReset}
           onShuffle={onShuffle}
           tiles={tiles}
+          tilesSharedValue={tilesSharedValue}
+          isGameFinishedShared={isGameFinishedShared}
+          emptyTileIndex={emptyTileIndex}
+          swapTiles={swapTiles}
           onTileMove={onTileMove}
         />
       ) : (

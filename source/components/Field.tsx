@@ -11,13 +11,20 @@ interface Props {
   onTileMove: OnTileMove;
 }
 
-export const Field = ({ tiles, onTileMove }: Props) => {
+export const Field = ({
+  tiles,
+  tilesSharedValue,
+  emptyTileIndex,
+  isGameFinishedShared,
+  onTileMove,
+  swapTiles,
+}: Props) => {
   const emptyTilePosition = tiles.indexOf(emptyTile);
   const { isGameFinished } = useIsGameFinished(tiles);
 
   return (
     <View style={styles.container}>
-      {tiles.map((tile: tileType, i: number) => (
+      {tilesSharedValue.value.map((tile: tileType, i: number) => (
         <Tile
           emptyTilePosition={emptyTilePosition}
           isGameFinished={isGameFinished}
@@ -25,6 +32,10 @@ export const Field = ({ tiles, onTileMove }: Props) => {
           key={`key-${tile}`} // todo: fix keys changing on every render
           position={i}
           tile={tile}
+          tilesSharedValue={tilesSharedValue}
+          isGameFinishedShared={isGameFinishedShared}
+          emptyTileIndex={emptyTileIndex}
+          swapTiles={swapTiles}
         />
       ))}
     </View>
